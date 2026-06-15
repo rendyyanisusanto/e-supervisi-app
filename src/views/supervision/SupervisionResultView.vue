@@ -12,16 +12,11 @@ import ReportFooter from '../../components/report/ReportFooter.vue';
 import ReportSignatureSection from '../../components/report/ReportSignatureSection.vue';
 import jsPDF from 'jspdf';
 import { toJpeg } from 'html-to-image';
-import Card from 'primevue/card';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Skeleton from 'primevue/skeleton';
-import ProgressBar from 'primevue/progressbar';
 import { useToast } from 'primevue/usetoast';
-import { calculateCategoryScores } from '../../utils/score';
-import { dummyScoreRanges } from '../../data/dummyScoreRanges';
-
 const route = useRoute();
 const router = useRouter();
 const supervisionStore = useSupervisionStore();
@@ -40,10 +35,6 @@ const breadcrumbs = ref([
   { label: 'Hasil Supervisi' }
 ]);
 
-const categoryScores = computed(() => {
-  if (!supervision.value) return [];
-  return calculateCategoryScores(supervision.value.items, dummyScoreRanges);
-});
 
 const tableItems = computed(() => {
   if (!supervision.value) return [];
