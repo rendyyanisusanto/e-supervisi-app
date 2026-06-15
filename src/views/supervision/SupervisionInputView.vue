@@ -69,6 +69,16 @@ const itemsInActiveCategory = computed(() => {
   return supervision.value.items.filter(item => (item.instrumentName || item.itemCategory) === activeCategory.value);
 });
 
+const groupedItemsInActiveCategory = computed(() => {
+  const groups: Record<string, any[]> = {};
+  itemsInActiveCategory.value.forEach(item => {
+    const cat = item.itemCategory || 'Umum';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(item);
+  });
+  return groups;
+});
+
 const teacher = computed(() => teacherStore.teachers.find(t => t.id === supervision.value?.teacherId));
 const supervisor = computed(() => teacherStore.teachers.find(t => t.id === supervision.value?.supervisorId));
 const instruments = computed(() => {
@@ -239,13 +249,18 @@ const lowScoreItemsCount = computed(() => {
             v-model:activeCategory="activeCategory" 
           />
 
-          <div class="flex flex-col gap-2">
-            <InstrumentItemScoreCard 
-              v-for="item in itemsInActiveCategory" 
-              :key="item.id" 
-              :item="item" 
-              @update:item="(newItem) => { Object.assign(item, newItem) }"
-            />
+          <div class="flex flex-col gap-6">
+            <div v-for="(group, catName) in groupedItemsInActiveCategory" :key="catName" class="flex flex-col gap-2">
+              <div v-if="catName && catName !== 'Umum'" class="font-semibold text-blue-900 bg-blue-50 px-4 py-2.5 rounded-lg border border-blue-200 flex items-center gap-2 mb-2 shadow-sm">
+                <i class="pi pi-tags text-blue-500"></i> {{ catName }}
+              </div>
+              <InstrumentItemScoreCard 
+                v-for="item in group" 
+                :key="item.id" 
+                :item="item" 
+                @update:item="(newItem) => { Object.assign(item, newItem) }"
+              />
+            </div>
           </div>
         </div>
 

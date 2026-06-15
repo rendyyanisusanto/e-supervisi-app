@@ -11,12 +11,15 @@ import ReportHeader from '../../components/report/ReportHeader.vue';
 import ReportFooter from '../../components/report/ReportFooter.vue';
 import ReportSignatureSection from '../../components/report/ReportSignatureSection.vue';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { toJpeg } from 'html-to-image';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Skeleton from 'primevue/skeleton';
 import { useToast } from 'primevue/usetoast';
+import { calculateTotalScore, calculateMaxScore, calculateFinalScore, getScoreStatus } from '../../utils/score';
+
 const route = useRoute();
 const router = useRouter();
 const supervisionStore = useSupervisionStore();
@@ -40,8 +43,28 @@ const tableItems = computed(() => {
   if (!supervision.value) return [];
   return supervision.value.items.map(item => ({
     ...item,
-    displayGroup: item.instrumentName || item.itemCategory
+    displayGroup: (item.instrumentName && item.itemCategory && item.instrumentName !== item.itemCategory)
+      ? `${item.instrumentName} - ${item.itemCategory}`
+      : (item.instrumentName || item.itemCategory || 'Umum')
   }));
+});
+
+const nestedTableItems = computed(() => {
+  if (!supervision.value) return {};
+  
+  const instruments: Record<string, Record<string, any[]>> = {};
+  
+  supervision.value.items.forEach(item => {
+    const inst = item.instrumentName || 'Umum';
+    const cat = item.itemCategory || 'Tanpa Kategori';
+    
+    if (!instruments[inst]) instruments[inst] = {};
+    if (!instruments[inst][cat]) instruments[inst][cat] = [];
+    
+    instruments[inst][cat].push(item);
+  });
+  
+  return instruments;
 });
 
 const teacherHistory = ref<any[]>([]);
@@ -94,41 +117,72 @@ const printReport = async () => {
   await new Promise(resolve => setTimeout(resolve, 50));
   
   try {
-    const elementWidth = element.scrollWidth;
-    const elementHeight = element.scrollHeight;
-
-    const imgData = await toJpeg(element, {
-      quality: 0.98,
-      pixelRatio: 2,
-      backgroundColor: '#ffffff',
-      width: elementWidth,
-      height: elementHeight
-    });
+    const topElement = document.getElementById('pdf-top-section');
+    const bottomElement = document.getElementById('pdf-bottom-section');
     
     const pdf = new jsPDF('p', 'mm', 'a4');
-    
     const margin = 15; // 15mm margin
     const pdfWidth = pdf.internal.pageSize.getWidth() - (margin * 2);
-    const pdfHeight = (elementHeight * pdfWidth) / elementWidth;
     const pageHeight = pdf.internal.pageSize.getHeight();
     
-    let heightLeft = pdfHeight;
+    let currentY = margin;
     
-    // First page
-    pdf.addImage(imgData, 'JPEG', margin, margin, pdfWidth, pdfHeight);
-    heightLeft -= (pageHeight - margin * 2);
-    
-    let currentOffset = pageHeight - margin * 2;
-    
-    // Subsequent pages
-    while (heightLeft > 0) {
-      pdf.addPage();
-      let yPosition = margin - currentOffset;
-      pdf.addImage(imgData, 'JPEG', margin, yPosition, pdfWidth, pdfHeight);
-      
-      currentOffset += (pageHeight - margin * 2);
-      heightLeft -= (pageHeight - margin * 2);
+    // 1. Capture and add Top Section (Header + Identity)
+    if (topElement) {
+      const topWidth = topElement.scrollWidth;
+      const topHeight = topElement.scrollHeight;
+      const topImg = await toJpeg(topElement, { quality: 0.98, pixelRatio: 2, backgroundColor: '#ffffff', width: topWidth, height: topHeight });
+      const imgHeight = (topHeight * pdfWidth) / topWidth;
+      pdf.addImage(topImg, 'JPEG', margin, currentY, pdfWidth, imgHeight);
+      currentY += imgHeight + 5;
     }
+    
+    // 2. Render native table using jsPDF-AutoTable (Handles page breaks flawlessly)
+    autoTable(pdf, {
+      html: '#rincian-table',
+      startY: currentY,
+      theme: 'grid',
+      styles: { font: 'times', fontSize: 10, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.2 },
+      headStyles: { fillColor: [240, 240, 240], fontStyle: 'bold', textColor: [0, 0, 0] },
+      margin: { left: margin, right: margin, bottom: margin, top: margin },
+      didParseCell: function(data) {
+        if (data.cell.colSpan === 4) {
+          const cellText = (data.cell.text && data.cell.text.length > 0) ? data.cell.text[0].trim() : '';
+          if (cellText.startsWith('>')) {
+            // Category row
+            data.cell.styles.fillColor = [245, 245, 245];
+            data.cell.styles.fontStyle = 'bolditalic';
+            data.cell.styles.textColor = [0, 0, 0];
+            data.cell.styles.halign = 'left';
+          } else {
+            // Instrument row
+            data.cell.styles.fillColor = [220, 220, 220];
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.textColor = [0, 0, 0];
+            data.cell.styles.halign = 'left';
+          }
+        }
+      }
+    });
+    
+    // Get Y position after table ends
+    currentY = (pdf as any).lastAutoTable.finalY + 10;
+    
+    // 3. Capture and add Bottom Section (Notes + Signatures)
+    if (bottomElement) {
+      const bottomWidth = bottomElement.scrollWidth;
+      const bottomHeight = bottomElement.scrollHeight;
+      const bottomImg = await toJpeg(bottomElement, { quality: 0.98, pixelRatio: 2, backgroundColor: '#ffffff', width: bottomWidth, height: bottomHeight });
+      const imgHeight = (bottomHeight * pdfWidth) / bottomWidth;
+      
+      // If bottom section exceeds remaining space on the page, create a new page
+      if (currentY + imgHeight > pageHeight - margin) {
+        pdf.addPage();
+        currentY = margin;
+      }
+      pdf.addImage(bottomImg, 'JPEG', margin, currentY, pdfWidth, imgHeight);
+    }
+
     
     pdf.save(`Hasil_Supervisi_${teacher.value?.name?.replace(/\s+/g, '_') || 'Guru'}.pdf`);
     toast.add({ severity: 'success', summary: 'Berhasil', detail: 'PDF berhasil diunduh', life: 3000 });
@@ -165,83 +219,108 @@ const printReport = async () => {
 
     <div id="report-content" v-else-if="supervision" class="max-w-[800px] mx-auto bg-white p-8 md:p-12 shadow-md border border-gray-200 mt-4 print:shadow-none print:border-none print:m-0 print:p-0" style="font-family: 'Times New Roman', Times, serif;">
       
-      <!-- Report Header (Always visible now) -->
-      <div class="mb-8">
-        <ReportHeader :profile="profileStore.profile" :settings="settingStore.settings" />
-        <div class="text-center mt-6 mb-8">
-          <h2 class="font-bold text-xl underline underline-offset-4 mb-1 uppercase">Laporan Hasil Supervisi Akademik</h2>
+      <div id="pdf-top-section">
+        <!-- Report Header (Always visible now) -->
+        <div class="mb-8">
+          <ReportHeader :profile="profileStore.profile" :settings="settingStore.settings" />
+          <div class="text-center mt-6 mb-8">
+            <h2 class="font-bold text-xl underline underline-offset-4 mb-1 uppercase">Laporan Hasil Supervisi Akademik</h2>
+          </div>
         </div>
-      </div>
 
-      <!-- Identity Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-8 text-base">
-        <table class="w-full">
-          <tbody>
-            <tr>
-              <td class="py-1 w-32 font-medium text-gray-700">Nama Guru</td>
-              <td class="py-1 w-4 text-center">:</td>
-              <td class="py-1 font-bold text-gray-900">{{ teacher?.name || 'Tidak diketahui' }}</td>
-            </tr>
-            <tr>
-              <td class="py-1 font-medium text-gray-700">NIP/NUPTK</td>
-              <td class="py-1 text-center">:</td>
-              <td class="py-1 text-gray-900">{{ teacher?.nip || teacher?.nuptk || '-' }}</td>
-            </tr>
-            <tr>
-              <td class="py-1 font-medium text-gray-700">Mata Pelajaran</td>
-              <td class="py-1 text-center">:</td>
-              <td class="py-1 text-gray-900">{{ teacher?.mainSubjectName || '-' }}</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <table class="w-full">
-          <tbody>
-            <tr>
-              <td class="py-1 w-32 font-medium text-gray-700">Nama Penilai</td>
-              <td class="py-1 w-4 text-center">:</td>
-              <td class="py-1 text-gray-900">{{ supervisor?.name || 'Tidak diketahui' }}</td>
-            </tr>
-            <tr>
-              <td class="py-1 font-medium text-gray-700">Tanggal Supervisi</td>
-              <td class="py-1 text-center">:</td>
-              <td class="py-1 text-gray-900">{{ supervision.supervisionDate || supervision.scheduledDate || '-' }}</td>
-            </tr>
-            <tr>
-              <td class="py-1 font-medium text-gray-700">Lokasi / Kelas</td>
-              <td class="py-1 text-center">:</td>
-              <td class="py-1 text-gray-900">{{ supervision.location || '-' }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Identity Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-8 text-base">
+          <table class="w-full">
+            <tbody>
+              <tr>
+                <td class="py-1 w-32 font-medium text-gray-700">Nama Guru</td>
+                <td class="py-1 w-4 text-center">:</td>
+                <td class="py-1 font-bold text-gray-900">{{ teacher?.name || 'Tidak diketahui' }}</td>
+              </tr>
+              <tr>
+                <td class="py-1 font-medium text-gray-700">NIP/NUPTK</td>
+                <td class="py-1 text-center">:</td>
+                <td class="py-1 text-gray-900">{{ teacher?.nip || teacher?.nuptk || '-' }}</td>
+              </tr>
+              <tr>
+                <td class="py-1 font-medium text-gray-700">Mata Pelajaran</td>
+                <td class="py-1 text-center">:</td>
+                <td class="py-1 text-gray-900">{{ teacher?.mainSubjectName || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <table class="w-full">
+            <tbody>
+              <tr>
+                <td class="py-1 w-32 font-medium text-gray-700">Nama Penilai</td>
+                <td class="py-1 w-4 text-center">:</td>
+                <td class="py-1 text-gray-900">{{ supervisor?.name || 'Tidak diketahui' }}</td>
+              </tr>
+              <tr>
+                <td class="py-1 font-medium text-gray-700">Tanggal Supervisi</td>
+                <td class="py-1 text-center">:</td>
+                <td class="py-1 text-gray-900">{{ supervision.supervisionDate || supervision.scheduledDate || '-' }}</td>
+              </tr>
+              <tr>
+                <td class="py-1 font-medium text-gray-700">Lokasi / Kelas</td>
+                <td class="py-1 text-center">:</td>
+                <td class="py-1 text-gray-900">{{ supervision.location || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Table Nilai -->
       <div class="mb-8">
         <h3 class="font-bold text-lg mb-3 border-b-2 border-gray-800 pb-1 uppercase">I. Rincian Penilaian</h3>
-        <DataTable :value="tableItems" rowGroupMode="subheader" groupRowsBy="displayGroup" sortMode="single" sortField="displayGroup" :sortOrder="1" class="text-base p-datatable-sm" showGridlines>
-          <template #groupheader="slotProps">
-              <span class="font-bold text-gray-900 uppercase bg-gray-100 px-2 py-1 block">{{ slotProps.data.displayGroup }}</span>
-          </template>
-          <Column field="itemCode" header="Kode" style="width: 10%" bodyStyle="vertical-align: top;"></Column>
-          <Column field="itemDescription" header="Aspek yang Dinilai" style="width: 45%" bodyStyle="vertical-align: top;"></Column>
-          <Column header="Skor" style="width: 15%" bodyStyle="vertical-align: top;" class="text-center">
-            <template #body="{ data }">
-              <span class="font-bold">{{ data.score !== null ? data.score : '-' }}</span>
-              <span class="text-sm text-gray-600"> / {{ data.maxScore }}</span>
+        <table id="rincian-table" class="w-full border-collapse border border-gray-800 text-base">
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="border border-gray-800 p-2 text-center w-16">Kode</th>
+              <th class="border border-gray-800 p-2 text-left">Aspek yang Dinilai</th>
+              <th class="border border-gray-800 p-2 text-center w-28">Skor</th>
+              <th class="border border-gray-800 p-2 text-left w-64">Catatan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="(categories, instName) in nestedTableItems" :key="instName">
+              <!-- Instrument Header -->
+              <tr data-type="instrument" class="bg-gray-100">
+                <td colspan="4" class="border border-gray-800 p-2 font-bold text-gray-900 uppercase">
+                  {{ instName }}
+                </td>
+              </tr>
+              <template v-for="(items, catName) in categories" :key="catName">
+                <!-- Category Header -->
+                <tr data-type="category" v-if="catName !== 'Tanpa Kategori' && catName !== instName">
+                  <td colspan="4" class="border border-gray-800 p-2 font-bold italic text-gray-900 pl-6 bg-gray-50">
+                    > {{ catName }}
+                  </td>
+                </tr>
+                <!-- Items -->
+                <tr v-for="item in items" :key="item.id">
+                  <td class="border border-gray-800 p-2 align-top text-center">{{ item.itemCode }}</td>
+                  <td class="border border-gray-800 p-2 align-top" :class="{'pl-10': catName !== 'Tanpa Kategori' && catName !== instName}">
+                    {{ item.itemDescription }}
+                  </td>
+                  <td class="border border-gray-800 p-2 align-top text-center">
+                    <span class="font-bold">{{ item.score !== null ? item.score : '-' }}</span>
+                    <span class="text-sm text-gray-600"> / {{ item.maxScore }}</span>
+                  </td>
+                  <td class="border border-gray-800 p-2 align-top whitespace-pre-wrap">{{ item.note || '-' }}</td>
+                </tr>
+              </template>
             </template>
-          </Column>
-          <Column field="note" header="Catatan" style="width: 30%" bodyStyle="vertical-align: top;">
-            <template #body="{ data }">
-              <span class="text-base text-gray-800 whitespace-pre-wrap">{{ data.note || '-' }}</span>
-            </template>
-          </Column>
-        </DataTable>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Catatan Umum & Hasil Akhir -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        <div>
+      <div id="pdf-bottom-section">
+        <!-- Catatan Umum & Hasil Akhir -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <div>
           <h3 class="font-bold text-lg mb-3 border-b-2 border-gray-800 pb-1 uppercase">II. Catatan Supervisi</h3>
           <table class="w-full text-base border-collapse border border-gray-300">
             <tbody>
@@ -289,6 +368,7 @@ const printReport = async () => {
           :settings="settingStore.settings" 
           :supervisorName="supervisor?.name"
         />
+        </div>
       </div>
 
       <!-- Footer -->
