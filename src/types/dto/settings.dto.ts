@@ -22,3 +22,14 @@ export interface UpdateReportSettingsPayload {
   supervisorName: string;
   supervisorNip: string;
 }
+
+export type UpdateAppPreferencePayload = Partial<{
+  defaultPeriodId: string;
+  autoUseActivePeriod: boolean;
+  autoSaveAssessment: boolean;
+  requireNoteForLowScore: boolean;
+  lowScoreThreshold: number;
+  defaultScoreMax: number;
+  enableWaNotification: boolean;
+  enableReflectionReminder: boolean;
+}>;

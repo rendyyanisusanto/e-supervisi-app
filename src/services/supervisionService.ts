@@ -6,7 +6,7 @@ import { isApiMode } from './dataSource';
 import { endpoints } from './endpoints';
 import httpClient from './httpClient';
 import type { ApiListResponse, ApiResponse, QueryParams } from '../types/api';
-import type { CreateSupervisionPayload, UpdateSupervisionPayload, RescheduleSupervisionPayload, SaveSupervisionDraftPayload, SubmitSupervisionPayload, EvaluateSupervisionPayload } from '../types/dto/supervision.dto';
+import type { CreateSupervisionPayload, RescheduleSupervisionPayload, SaveSupervisionDraftPayload, SubmitSupervisionPayload } from '../types/dto/supervision.dto';
 import { paginateArray, sortArray, filterBySearch } from '../utils/pagination';
 import { SupervisionMapper } from '../mappers/supervisionMapper';
 
@@ -15,7 +15,7 @@ let supervisions = [...dummySupervisions];
 export const supervisionService = {
   async getSupervisions(query?: QueryParams): Promise<ApiListResponse<Supervision>> {
     if (isApiMode()) {
-      const response = await httpClient.get<ApiResponse<any>>(endpoints.supervisions.base, { params: query });
+      const response = await httpClient.get<any>(endpoints.supervisions.base, { params: query });
       return {
         success: response.data.success,
         message: response.data.message,
@@ -49,7 +49,7 @@ export const supervisionService = {
 
   async getSupervisionById(id: string | number): Promise<ApiResponse<Supervision>> {
     if (isApiMode()) {
-      const response = await httpClient.get<ApiResponse<any>>(`${endpoints.supervisions.base}/${id}`);
+      const response = await httpClient.get<any>(`${endpoints.supervisions.base}/${id}`);
       return {
         success: response.data.success,
         message: response.data.message,
@@ -71,7 +71,7 @@ export const supervisionService = {
   async createSupervision(payload: CreateSupervisionPayload): Promise<ApiResponse<Supervision>> {
     if (isApiMode()) {
       const mappedPayload = SupervisionMapper.toCreateApiPayload(payload);
-      const response = await httpClient.post<ApiResponse<any>>(endpoints.supervisions.base, mappedPayload);
+      const response = await httpClient.post<any>(endpoints.supervisions.base, mappedPayload);
       return {
         success: response.data.success,
         message: response.data.message,
@@ -80,7 +80,7 @@ export const supervisionService = {
     }
 
     await mockDelay(600);
-    const instrumentId = payload.instrumentId || (payload as any).instrumentIds?.[0]; // Fallback if dummy still used array
+    const instrumentId = payload.instrumentIds?.[0];
     if (!instrumentId) throw new Error('Instrumen harus dipilih');
 
     const selectedInstrument = dummyInstruments.find(i => String(i.id) === String(instrumentId));
@@ -91,7 +91,7 @@ export const supervisionService = {
       periodId: String(payload.periodId),
       teacherId: String(payload.teacherId),
       supervisorId: String(payload.supervisorId),
-      instrumentId: String(instrumentId),
+      instrumentIds: [String(instrumentId)],
       subjectId: payload.subjectId ? String(payload.subjectId) : undefined,
       classroomId: payload.classroomId ? String(payload.classroomId) : undefined,
       supervisionType: payload.supervisionType || 'LANGSUNG',
@@ -137,7 +137,7 @@ export const supervisionService = {
 
   async updateSchedule(id: string | number, payload: RescheduleSupervisionPayload): Promise<ApiResponse<Supervision>> {
     if (isApiMode()) {
-      const response = await httpClient.put<ApiResponse<any>>(`${endpoints.supervisions.base}/${id}/schedule`, payload);
+      const response = await httpClient.put<any>(`${endpoints.supervisions.base}/${id}/schedule`, payload);
       return {
         success: response.data.success,
         message: response.data.message,
@@ -168,7 +168,7 @@ export const supervisionService = {
   async saveDraft(id: string | number, payload: SaveSupervisionDraftPayload): Promise<ApiResponse<Supervision>> {
     if (isApiMode()) {
       const mappedPayload = SupervisionMapper.toDraftApiPayload(payload);
-      const response = await httpClient.put<ApiResponse<any>>(`${endpoints.supervisions.base}/${id}/draft`, mappedPayload);
+      const response = await httpClient.put<any>(`${endpoints.supervisions.base}/${id}/draft`, mappedPayload);
       return {
         success: response.data.success,
         message: response.data.message,
@@ -185,7 +185,7 @@ export const supervisionService = {
       const item = sup.items.find(i => String(i.id) === String(evalData.supervisionItemId));
       if (item) {
         item.score = evalData.score;
-        item.note = evalData.note;
+        item.note = evalData.note ?? '';
       }
     });
 
@@ -207,7 +207,7 @@ export const supervisionService = {
   async submitFinal(id: string | number, payload: SubmitSupervisionPayload): Promise<ApiResponse<Supervision>> {
     if (isApiMode()) {
       const mappedPayload = SupervisionMapper.toFinalApiPayload(payload);
-      const response = await httpClient.post<ApiResponse<any>>(`${endpoints.supervisions.base}/${id}/submit`, mappedPayload);
+      const response = await httpClient.post<any>(`${endpoints.supervisions.base}/${id}/submit`, mappedPayload);
       return {
         success: response.data.success,
         message: response.data.message,
@@ -224,7 +224,7 @@ export const supervisionService = {
       const item = sup.items.find(i => String(i.id) === String(evalData.supervisionItemId));
       if (item) {
         item.score = evalData.score;
-        item.note = evalData.note;
+        item.note = evalData.note ?? '';
       }
     });
 
@@ -254,7 +254,7 @@ export const supervisionService = {
     else sup.finalStatus = 'Kurang';
 
     sup.status = 'SELESAI';
-    sup.supervisionDate = payload.supervisionDate || new Date().toISOString().split('T')[0];
+    sup.supervisionDate = ( payload.supervisionDate || new Date().toISOString().split('T')[0]) as any;
     sup.updatedAt = new Date().toISOString();
 
     return {

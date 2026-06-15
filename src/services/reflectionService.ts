@@ -3,13 +3,14 @@ import { endpoints } from './endpoints';
 import httpClient from './httpClient';
 import { mockDelay } from './mockDelay';
 import type { ApiListResponse, ApiResponse, QueryParams } from '../types/api';
-import type { ReflectionDto, SubmitReflectionPayload } from '../types/dto/reflection.dto';
+import type { UpdateReflectionPayload as SubmitReflectionPayload } from '../types/dto/reflection.dto';
+import type { TeacherReflection as ReflectionDto } from '../types/reflection';
 import { ReflectionMapper } from '../mappers/reflectionMapper';
 
 export const reflectionService = {
   async getReflections(query?: QueryParams): Promise<ApiListResponse<ReflectionDto>> {
     if (isApiMode()) {
-      const response = await httpClient.get<ApiResponse<any>>(endpoints.reflections, { params: query });
+      const response = await httpClient.get<any>(endpoints.reflections, { params: query });
       return {
         success: response.data.success,
         message: response.data.message,
@@ -18,12 +19,12 @@ export const reflectionService = {
       };
     }
     await mockDelay(400);
-    return { success: true, message: 'Dummy mode', data: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } };
+    return { success: true, message: 'Dummy mode', data: [], meta: { page: 1, totalPages: 1, limit: 10, total: 0 } };
   },
 
   async getReflectionBySupervisionId(supervisionId: string | number): Promise<ApiResponse<ReflectionDto>> {
     if (isApiMode()) {
-      const response = await httpClient.get<ApiResponse<any>>(`${endpoints.reflections}/supervision/${supervisionId}`);
+      const response = await httpClient.get<any>(`${endpoints.reflections}/supervision/${supervisionId}`);
       return {
         success: response.data.success,
         message: response.data.message,
@@ -37,7 +38,7 @@ export const reflectionService = {
   async submitReflection(supervisionId: string | number, payload: SubmitReflectionPayload): Promise<ApiResponse<ReflectionDto>> {
     if (isApiMode()) {
       const mapped = ReflectionMapper.toSubmitApiPayload(payload);
-      const response = await httpClient.post<ApiResponse<any>>(`${endpoints.reflections}/supervision/${supervisionId}`, mapped);
+      const response = await httpClient.post<any>(`${endpoints.reflections}/supervision/${supervisionId}`, mapped);
       return {
         success: response.data.success,
         message: response.data.message,
@@ -50,7 +51,7 @@ export const reflectionService = {
 
   async markAsRead(id: string | number): Promise<ApiResponse<ReflectionDto>> {
     if (isApiMode()) {
-      const response = await httpClient.patch<ApiResponse<any>>(`${endpoints.reflections}/${id}/read`);
+      const response = await httpClient.patch<any>(`${endpoints.reflections}/${id}/read`);
       return {
         success: response.data.success,
         message: response.data.message,

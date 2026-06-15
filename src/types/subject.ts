@@ -1,7 +1,7 @@
 export interface Subject {
   id: string;
-  code: string;
+  code?: string;
   name: string;
-  groupName: string;
+  groupName?: string;
   isActive: boolean;
 }

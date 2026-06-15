@@ -3,7 +3,6 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useReportStore } from '../../stores/reportStore';
 import { usePeriodStore } from '../../stores/periodStore';
 import { useRouter } from 'vue-router';
-import { triggerPrint } from '../../utils/print';
 import { formatDate } from '../../utils/formatDate';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -28,8 +27,8 @@ const searchQuery = ref('');
 
 onMounted(async () => {
   await periodStore.fetchPeriods();
-  if (periodStore.activePeriod) {
-    selectedPeriod.value = periodStore.activePeriod;
+  if ((periodStore as any).activePeriod) {
+    selectedPeriod.value = (periodStore as any).activePeriod;
   } else if (periodStore.periods.length > 0) {
     selectedPeriod.value = periodStore.periods[0];
   }
@@ -51,7 +50,6 @@ const loadData = async (periodId: string) => {
 
 const summary = computed(() => reportStore.currentRecapSummary);
 const byInstrument = computed(() => reportStore.currentRecapByInstrument);
-const bySupervisor = computed(() => reportStore.currentRecapBySupervisor);
 const teacherCoverage = computed(() => reportStore.currentRecapTeacherCoverage);
 const supervisionsData = computed(() => reportStore.currentRecapData);
 

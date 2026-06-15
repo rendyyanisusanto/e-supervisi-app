@@ -1,4 +1,5 @@
-import type { ReflectionDto, SubmitReflectionPayload } from '../types/dto/reflection.dto';
+import type { UpdateReflectionPayload as SubmitReflectionPayload } from '../types/dto/reflection.dto';
+import type { TeacherReflection as ReflectionDto } from '../types/reflection';
 
 export const ReflectionMapper = {
   toReflectionDto(apiData: any): ReflectionDto {
@@ -16,14 +17,7 @@ export const ReflectionMapper = {
       readAt: apiData.readAt || apiData.read_at,
       createdAt: apiData.createdAt || apiData.created_at,
       updatedAt: apiData.updatedAt || apiData.updated_at,
-      teacher: apiData.teacher,
-      supervision: apiData.supervision ? {
-        id: apiData.supervision.id,
-        periodId: apiData.supervision.periodId || apiData.supervision.period_id,
-        supervisionDate: apiData.supervision.supervisionDate || apiData.supervision.supervision_date,
-        finalScore: apiData.supervision.finalScore || apiData.supervision.final_score,
-        finalStatus: apiData.supervision.finalStatus || apiData.supervision.final_status
-      } : undefined
+
     };
   },
 

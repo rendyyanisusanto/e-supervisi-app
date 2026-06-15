@@ -1,6 +1,5 @@
 import type { Supervision, SupervisionItem } from '../types/supervision';
 import type {
-  CreateSupervisionPayload,
   SaveSupervisionDraftPayload,
   SubmitSupervisionPayload
 } from '../types/dto/supervision.dto';
@@ -29,7 +28,6 @@ export const SupervisionMapper = {
       teacherId: apiData.teacherId || apiData.teacher_id,
       supervisorId: apiData.supervisorId || apiData.supervisor_id,
       instrumentIds: apiData.instrument_id ? [String(apiData.instrument_id)] : (apiData.instrumentIds || []),
-      instrumentId: apiData.instrumentId || apiData.instrument_id,
       subjectId: apiData.subjectId || apiData.subject_id,
       classroomId: apiData.classroomId || apiData.classroom_id,
       

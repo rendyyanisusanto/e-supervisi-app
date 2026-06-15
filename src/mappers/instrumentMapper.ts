@@ -1,6 +1,6 @@
 export class InstrumentMapper {
   static toFrontendItem(apiItem: any) {
-    if (!apiItem) return null;
+    if (!apiItem) return {} as any;
     return {
       id: String(apiItem.id),
       instrumentId: String(apiItem.instrument_id),
@@ -25,7 +25,7 @@ export class InstrumentMapper {
   }
 
   static toFrontend(apiInstrument: any) {
-    if (!apiInstrument) return null;
+    if (!apiInstrument) return {} as any;
     return {
       id: String(apiInstrument.id),
       code: apiInstrument.code,

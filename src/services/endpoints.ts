@@ -34,6 +34,8 @@ export const endpoints = {
     schoolProfile: '/settings/school-profile',
     schoolProfileLogo: '/settings/school-profile/logo',
     reportSettings: '/settings/report-settings',
+    appPreference: '/settings/app-preferences',
+    users: '/users',
   },
   wa: {
     templates: '/wa/templates',

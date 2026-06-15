@@ -1,6 +1,6 @@
 export class NotificationMapper {
   static toFrontend(apiNotif: any) {
-    if (!apiNotif) return null;
+    if (!apiNotif) return {} as any;
     return {
       id: String(apiNotif.id),
       userId: apiNotif.user_id ? String(apiNotif.user_id) : undefined,

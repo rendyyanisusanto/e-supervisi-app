@@ -82,7 +82,7 @@ export const notificationService = {
     };
   },
   
-  async markAllAsRead(userId: string | number): Promise<ApiResponse<void>> {
+  async markAllAsRead(userId?: string | number): Promise<ApiResponse<void>> {
     if (isApiMode()) {
       try {
         const response = await httpClient.patch<ApiResponse<void>>(`${endpoints.notifications}/read-all`);
@@ -96,7 +96,7 @@ export const notificationService = {
     
     notifications = notifications.map(n => {
       // Mark as read if it belongs to the user or is a global notification
-      if (!n.userId || String(n.userId) === String(userId)) {
+      if (!userId || !n.userId || String(n.userId) === String(userId)) {
         return { ...n, isRead: true };
       }
       return n;

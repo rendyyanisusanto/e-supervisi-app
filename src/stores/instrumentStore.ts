@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { Instrument, InstrumentItem } from '../types/instrument';
+import type { Instrument } from '../types/instrument';
 import { instrumentService } from '../services/instrumentService';
 import { getApiErrorMessage } from '../utils/apiError';
 import type { CreateInstrumentPayload, UpdateInstrumentPayload, CreateInstrumentItemPayload, UpdateInstrumentItemPayload, ReorderInstrumentItemPayload } from '../types/dto/instrument.dto';

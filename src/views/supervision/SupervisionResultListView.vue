@@ -15,7 +15,6 @@ import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Toast from 'primevue/toast';
 
 const router = useRouter();
 const supervisionStore = useSupervisionStore();

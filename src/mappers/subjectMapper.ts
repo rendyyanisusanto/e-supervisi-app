@@ -1,6 +1,6 @@
 export class SubjectMapper {
   static toFrontend(apiSubject: any) {
-    if (!apiSubject) return null;
+    if (!apiSubject) return {} as any;
     return {
       id: String(apiSubject.id),
       code: apiSubject.code,

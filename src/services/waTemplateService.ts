@@ -1,11 +1,12 @@
-import { dummyWaTemplates, dummyWaLogs } from '../data/dummyWa';
-import type { WaTemplate, WaLog } from '../types/wa';
+import { dummyWaTemplates } from '../data/dummyWaTemplates';
+import { dummyWaLogs } from '../data/dummyWaLogs';
+import type { WaTemplate, WaLog } from '../types/waTemplate';
 import { mockDelay } from './mockDelay';
 import { isApiMode } from './dataSource';
 import { endpoints } from './endpoints';
 import httpClient from './httpClient';
 import type { ApiListResponse, ApiResponse, QueryParams } from '../types/api';
-import type { UpdateWaTemplatePayload, SendTestWaPayload } from '../types/dto/wa.dto';
+import type { UpdateWaTemplatePayload as CreateWaTemplatePayload, UpdateWaTemplatePayload, SendTestWaPayload } from '../types/dto/wa.dto';
 import { paginateArray, filterBySearch, sortArray } from '../utils/pagination';
 import { WaMapper } from '../mappers/waMapper';
 
@@ -88,7 +89,7 @@ export const waTemplateService = {
       isDefault: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    } as WaTemplate;
+    } as any;
     templates.push(newTemplate);
     
     return {
@@ -184,10 +185,10 @@ export const waTemplateService = {
       recipientNumber: payload.phone,
       recipientName: 'Test User',
       templateName: template.name,
-      status: isSuccess ? 'sent' : 'failed',
+      status: isSuccess ? 'SENT' : 'FAILED',
       sentAt: new Date().toISOString(),
       errorMessage: isSuccess ? undefined : 'Koneksi ke provider WhatsApp gagal'
-    });
+    } as any);
 
     if (!isSuccess) {
       throw new Error('Gagal mengirim WhatsApp. Cek log pengiriman.');
@@ -218,7 +219,7 @@ export const waTemplateService = {
           status: log.status.toLowerCase(),
           sentAt: log.sent_at,
           errorMessage: log.error_message
-        })),
+        } as any)),
         meta: response.data.meta
       };
     }
@@ -230,7 +231,7 @@ export const waTemplateService = {
     let result = [...logs];
 
     if (query?.search) {
-      result = filterBySearch(result, query.search, ['recipientNumber', 'recipientName', 'templateName']);
+      result = filterBySearch(result, query.search, ['phone', 'recipientName', 'templateName']);
     }
     
     if (query?.status) {
@@ -264,14 +265,14 @@ export const waTemplateService = {
     const index = logs.findIndex(l => String(l.id) === String(id));
     if (index === -1) throw new Error('Log pesan tidak ditemukan');
     
-    if (logs[index].status === 'sent') {
+    if (logs[index].status === 'SENT') {
       throw new Error('Pesan ini sudah berhasil terkirim sebelumnya');
     }
 
     // Simulate retry success
     logs[index] = {
       ...logs[index],
-      status: 'sent',
+      status: 'SENT',
       sentAt: new Date().toISOString(),
       errorMessage: undefined
     };

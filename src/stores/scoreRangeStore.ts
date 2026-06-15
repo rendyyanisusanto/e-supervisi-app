@@ -20,7 +20,7 @@ export const useScoreRangeStore = defineStore('scoreRange', () => {
     try {
       const res = await scoreRangeService.getScoreRanges();
       if (res.success) {
-        scoreRanges.value = res.data;
+        scoreRanges.value = res.data ?? [];
       }
     } catch (err: any) {
       error.value = getApiErrorMessage(err, 'Gagal mengambil data rentang nilai');

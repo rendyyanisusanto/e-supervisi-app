@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import type { TeacherReflection } from '../types/reflection';
 import { reflectionService } from '../services/reflectionService';
 import { getApiErrorMessage } from '../utils/apiError';
-import type { CreateReflectionPayload, UpdateReflectionPayload } from '../types/dto/reflection.dto';
+import type { UpdateReflectionPayload as SubmitReflectionPayload } from '../types/dto/reflection.dto';
 import type { QueryParams } from '../types/api';
 
 export const useReflectionStore = defineStore('reflection', () => {
@@ -22,7 +22,7 @@ export const useReflectionStore = defineStore('reflection', () => {
     try {
       const res = await reflectionService.getReflections(query);
       if (res.success) {
-        reflections.value = res.data;
+        reflections.value = res.data ?? [];
       }
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal mengambil data refleksi');
@@ -37,7 +37,7 @@ export const useReflectionStore = defineStore('reflection', () => {
     try {
       const res = await reflectionService.getReflectionBySupervisionId(supervisionId);
       if (res.success) {
-        currentReflection.value = res.data;
+        currentReflection.value = res.data ?? null;
       }
     } catch (e: any) {
       error.value = getApiErrorMessage(e);
@@ -46,21 +46,13 @@ export const useReflectionStore = defineStore('reflection', () => {
     }
   };
 
-  const saveReflection = async (data: CreateReflectionPayload | UpdateReflectionPayload) => {
+  const saveReflection = async (supervisionId: string | number, data: SubmitReflectionPayload) => {
     loading.value = true;
     error.value = null;
     try {
-      if (currentReflection.value?.id) {
-        // Determine whether we are sending all required Create fields or partial Update
-        const res = await reflectionService.updateReflection(currentReflection.value.id, data as UpdateReflectionPayload);
-        if (res.success) {
-          currentReflection.value = res.data;
-        }
-      } else {
-        const res = await reflectionService.createReflection(data as CreateReflectionPayload);
-        if (res.success) {
-          currentReflection.value = res.data;
-        }
+      const res = await reflectionService.submitReflection(supervisionId, data);
+      if (res.success) {
+        currentReflection.value = res.data ?? null;
       }
       await fetchReflections();
     } catch (e: any) {
@@ -77,10 +69,10 @@ export const useReflectionStore = defineStore('reflection', () => {
       if (res.success) {
         const index = reflections.value.findIndex(r => String(r.id) === String(id));
         if (index !== -1) {
-          reflections.value[index] = res.data;
+          reflections.value[index] = res.data!;
         }
         if (currentReflection.value && String(currentReflection.value.id) === String(id)) {
-          currentReflection.value = res.data;
+          currentReflection.value = res.data ?? null;
         }
       }
     } catch (e: any) {

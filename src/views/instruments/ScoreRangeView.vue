@@ -46,7 +46,7 @@ const form = ref<any>({
   id: '',
   minScore: 0,
   maxScore: 100,
-  status: '',
+  name: '',
   color: 'success',
   description: ''
 });
@@ -64,7 +64,7 @@ onMounted(() => {
 });
 
 const openAddDialog = () => {
-  form.value = { id: '', minScore: 0, maxScore: 100, status: '', color: 'success', description: '' };
+  form.value = { id: '', minScore: 0, maxScore: 100, name: '', color: 'success', description: '' };
   dialogMode.value = 'add';
   submitted.value = false;
   dialogVisible.value = true;
@@ -80,7 +80,7 @@ const openEditDialog = (data: any) => {
 const saveScoreRange = async () => {
   submitted.value = true;
   
-  if (form.value.minScore === null || form.value.maxScore === null || !form.value.status) {
+  if (form.value.minScore === null || form.value.maxScore === null || !form.value.name) {
     toast.add({ severity: 'error', summary: 'Validasi Gagal', detail: 'Harap isi semua field wajib', life: 3000 });
     return;
   }
@@ -106,7 +106,7 @@ const saveScoreRange = async () => {
 
 const deleteScoreRange = (data: any) => {
   confirm.require({
-    message: `Hapus rentang nilai "${data.status}"?`,
+    message: `Hapus rentang nilai "${data.name}"?`,
     header: 'Konfirmasi',
     icon: 'pi pi-trash',
     acceptClass: 'p-button-danger',
@@ -175,9 +175,9 @@ const getActionItems = (data: any) => [
                 <span class="font-mono text-slate-800 font-semibold">{{ data.minScore }} - {{ data.maxScore }}</span>
               </template>
             </Column>
-            <Column field="status" header="Predikat / Status">
+            <Column field="name" header="Predikat / Status">
               <template #body="{ data }">
-                <Tag :value="data.status" :severity="data.color" rounded />
+                <Tag :value="data.name" :severity="data.color" rounded />
               </template>
             </Column>
             <Column field="description" header="Keterangan">
@@ -214,7 +214,7 @@ const getActionItems = (data: any) => [
               <div v-if="simScore !== null" class="mt-2 text-center p-4 rounded-xl border" :class="simResult ? `bg-${simResult.color}-50 border-${simResult.color}-200` : 'bg-slate-100 border-slate-300'">
                 <div class="text-sm text-slate-500">Hasil Predikat:</div>
                 <div v-if="simResult">
-                  <Tag :value="simResult.status" :severity="simResult.color" class="text-lg px-4 py-2" rounded />
+                  <Tag :value="simResult.name" :severity="simResult.color" class="text-lg px-4 py-2" rounded />
                   <p class="text-sm text-slate-600 mt-3">{{ simResult.description }}</p>
                 </div>
                 <div v-else class="text-red-500 font-medium">
@@ -244,7 +244,7 @@ const getActionItems = (data: any) => [
 
         <div class="flex flex-col gap-1">
           <label class="block text-sm font-medium text-slate-700">Predikat / Status <span class="text-red-500">*</span></label>
-          <InputText class="w-full" v-model.trim="form.status" required :class="{'p-invalid': submitted && !form.status}" placeholder="Contoh: Baik Sekali, Cukup, dll" />
+          <InputText class="w-full" v-model.trim="form.name" required :class="{'p-invalid': submitted && !form.name}" placeholder="Contoh: Baik Sekali, Cukup, dll" />
         </div>
 
         <div class="flex flex-col gap-1">

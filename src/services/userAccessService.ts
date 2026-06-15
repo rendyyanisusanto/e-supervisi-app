@@ -23,7 +23,7 @@ export const userAccessService = {
     }));
 
     if (query?.search) {
-      result = filterBySearch(result, query.search, ['name', 'nip', 'userAccount.username']);
+      result = filterBySearch(result, query.search, ['name', 'nip', 'name']);
     }
 
     const { data, meta } = paginateArray(result, query?.page || 1, query?.limit || 100);
@@ -55,7 +55,7 @@ export const userAccessService = {
     }
     
     const updatedRes = await teacherService.updateTeacher(userId, { userAccount: teacher.userAccount } as any);
-    const userAccess: UserAccess = { ...updatedRes.data, lastLogin: new Date().toISOString() };
+    const userAccess: UserAccess = { ...updatedRes.data, lastLogin: new Date().toISOString() } as UserAccess;
     
     return {
       success: true,
@@ -77,7 +77,7 @@ export const userAccessService = {
     
     teacher.userAccount.isActive = !teacher.userAccount.isActive;
     const updatedRes = await teacherService.updateTeacher(userId, { userAccount: teacher.userAccount } as any);
-    const userAccess: UserAccess = { ...updatedRes.data };
+    const userAccess: UserAccess = { ...updatedRes.data } as UserAccess;
 
     return {
       success: true,

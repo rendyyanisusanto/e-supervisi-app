@@ -1,5 +1,5 @@
 import { dummyInstruments } from '../data/dummyInstruments';
-import type { Instrument, InstrumentItem } from '../types/instrument';
+import type { Instrument, InstrumentItem, InstrumentType } from '../types/instrument';
 import { mockDelay } from './mockDelay';
 import { isApiMode } from './dataSource';
 import { endpoints } from './endpoints';
@@ -9,8 +9,7 @@ import type {
   CreateInstrumentPayload, 
   UpdateInstrumentPayload,
   CreateInstrumentItemPayload,
-  UpdateInstrumentItemPayload,
-  ReorderInstrumentItemsPayload
+  
 } from '../types/dto/instrument.dto';
 import { paginateArray, sortArray, filterBySearch } from '../utils/pagination';
 import { InstrumentMapper } from '../mappers/instrumentMapper';
@@ -98,6 +97,9 @@ export const instrumentService = {
     const newInstrument: Instrument = {
       ...payload,
       id: Date.now().toString(),
+      code: (payload as any).code || `INS-${Date.now()}`,
+      description: payload.description || '',
+      type: payload.type as InstrumentType,
       isActive: payload.isActive ?? true,
       itemsCount: 0
     };
@@ -255,10 +257,14 @@ export const instrumentService = {
 
     await mockDelay(500);
     const newItem: InstrumentItem = {
-      ...payload,
       id: Date.now().toString(),
       instrumentId: String(instrumentId),
-      isActive: payload.isActive ?? true
+      category: payload.category || '',
+      code: payload.code || '',
+      description: payload.indicator || payload.aspect || '',
+      maxScore: 4,
+      sortOrder: payload.order || 0,
+      isActive: (payload as any).isActive ?? true
     };
     
     items.push(newItem);
@@ -274,7 +280,7 @@ export const instrumentService = {
   async updateInstrumentItem(
     instrumentId: string | number, 
     itemId: string | number, 
-    payload: UpdateInstrumentItemPayload
+    payload: any
   ): Promise<ApiResponse<InstrumentItem>> {
     if (isApiMode()) {
       const apiPayload = InstrumentMapper.toApiItemPayload(payload);
@@ -318,14 +324,14 @@ export const instrumentService = {
     };
   },
 
-  async reorderInstrumentItems(instrumentId: string | number, payload: ReorderInstrumentItemsPayload): Promise<ApiResponse<void>> {
+  async reorderInstrumentItems(instrumentId: string | number, payload: any): Promise<ApiResponse<void>> {
     if (isApiMode()) {
       const response = await httpClient.patch<ApiResponse<void>>(`${endpoints.instruments}/${instrumentId}/items/reorder`, payload);
       return response.data;
     }
 
     await mockDelay(600);
-    payload.items.forEach(orderItem => {
+    payload.items.forEach((orderItem: any) => {
       const index = items.findIndex(i => String(i.id) === String(orderItem.id) && String(i.instrumentId) === String(instrumentId));
       if (index !== -1) {
         items[index].sortOrder = orderItem.sortOrder;

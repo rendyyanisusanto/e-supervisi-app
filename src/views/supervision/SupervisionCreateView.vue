@@ -17,7 +17,6 @@ import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Calendar from 'primevue/calendar';
 import RadioButton from 'primevue/radiobutton';
-import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 
 const router = useRouter();

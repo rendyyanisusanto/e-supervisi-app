@@ -1,11 +1,11 @@
 import { dummySchoolProfile } from '../data/dummySchoolProfile';
-import type { SchoolProfile } from '../types/setting';
+import type { SchoolProfile } from '../types/schoolProfile';
 import { mockDelay } from './mockDelay';
 import { isApiMode } from './dataSource';
 import { endpoints } from './endpoints';
 import httpClient from './httpClient';
 import type { ApiResponse } from '../types/api';
-import type { UpdateSchoolProfilePayload } from '../types/dto/setting.dto';
+import type { UpdateSchoolProfilePayload } from '../types/dto/settings.dto';
 import { SettingMapper } from '../mappers/settingMapper';
 
 // Local state for dummy mode

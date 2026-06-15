@@ -1,6 +1,6 @@
 export class SettingMapper {
   static profileToFrontend(apiProfile: any) {
-    if (!apiProfile) return null;
+    if (!apiProfile) return {} as any;
     return {
       id: String(apiProfile.id),
       name: apiProfile.name,
@@ -40,7 +40,7 @@ export class SettingMapper {
   }
 
   static reportSettingToFrontend(apiSetting: any) {
-    if (!apiSetting) return null;
+    if (!apiSetting) return {} as any;
     return {
       id: String(apiSetting.id),
       showLogo: apiSetting.show_logo,
@@ -76,7 +76,7 @@ export class SettingMapper {
   }
 
   static appPreferenceToFrontend(apiPref: any) {
-    if (!apiPref) return null;
+    if (!apiPref) return {} as any;
     return {
       id: String(apiPref.id),
       autoUseActivePeriod: apiPref.auto_use_active_period,

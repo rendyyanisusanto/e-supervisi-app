@@ -1,6 +1,6 @@
 export class PeriodMapper {
   static toFrontend(apiPeriod: any) {
-    if (!apiPeriod) return null;
+    if (!apiPeriod) return {} as any;
     return {
       id: String(apiPeriod.id),
       name: apiPeriod.name,

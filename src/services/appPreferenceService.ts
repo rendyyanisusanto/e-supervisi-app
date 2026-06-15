@@ -1,11 +1,11 @@
 import { dummyAppPreferences } from '../data/dummyAppPreferences';
-import type { AppPreference } from '../types/setting';
+import type { AppPreference } from '../types/appPreference';
 import { mockDelay } from './mockDelay';
 import { isApiMode } from './dataSource';
 import { endpoints } from './endpoints';
 import httpClient from './httpClient';
 import type { ApiResponse } from '../types/api';
-import type { UpdateAppPreferencePayload } from '../types/dto/setting.dto';
+import type { UpdateAppPreferencePayload } from '../types/dto/settings.dto';
 import { SettingMapper } from '../mappers/settingMapper';
 
 // Local state for dummy mode

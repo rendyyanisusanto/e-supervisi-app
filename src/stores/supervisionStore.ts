@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import type { Supervision } from '../types/supervision';
 import { supervisionService } from '../services/supervisionService';
 import { getApiErrorMessage } from '../utils/apiError';
-import type { CreateSupervisionPayload, UpdateSupervisionPayload, EvaluateSupervisionPayload } from '../types/dto/supervision.dto';
+import type { CreateSupervisionPayload } from '../types/dto/supervision.dto';
 import type { QueryParams } from '../types/api';
 
 export const useSupervisionStore = defineStore('supervision', () => {
@@ -56,7 +56,7 @@ export const useSupervisionStore = defineStore('supervision', () => {
     try {
       const res = await supervisionService.createSupervision(data);
       if (res.success) {
-        supervisions.value.unshift(res.data);
+        supervisions.value.unshift(res.data as any);
         return res.data;
       }
     } catch (err: any) {
@@ -74,9 +74,9 @@ export const useSupervisionStore = defineStore('supervision', () => {
       const res = await supervisionService.updateSchedule(id, data);
       if (res.success && res.data) {
         const index = supervisions.value.findIndex(s => String(s.id) === String(id));
-        if (index !== -1) supervisions.value[index] = res.data;
+        if (index !== -1) supervisions.value[index] = res.data as any;
         if (currentSupervision.value && String(currentSupervision.value.id) === String(id)) {
-          currentSupervision.value = res.data;
+          currentSupervision.value = res.data as any;
         }
         return res.data;
       }
@@ -95,7 +95,7 @@ export const useSupervisionStore = defineStore('supervision', () => {
       const res = await supervisionService.saveDraft(id, data);
       if (res.success && res.data) {
         const index = supervisions.value.findIndex(s => String(s.id) === String(id));
-        if (index !== -1) supervisions.value[index] = res.data;
+        if (index !== -1) supervisions.value[index] = res.data as any;
         if (currentSupervision.value && String(currentSupervision.value.id) === String(id)) {
           currentSupervision.value = res.data as unknown as Supervision;
         }
@@ -116,7 +116,7 @@ export const useSupervisionStore = defineStore('supervision', () => {
       const res = await supervisionService.submitFinal(id, data);
       if (res.success && res.data) {
         const index = supervisions.value.findIndex(s => String(s.id) === String(id));
-        if (index !== -1) supervisions.value[index] = res.data;
+        if (index !== -1) supervisions.value[index] = res.data as any;
         if (currentSupervision.value && String(currentSupervision.value.id) === String(id)) {
           currentSupervision.value = res.data as unknown as Supervision;
         }

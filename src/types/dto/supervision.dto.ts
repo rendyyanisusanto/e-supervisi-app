@@ -24,6 +24,7 @@ export interface SaveSupervisionDraftPayload {
   generalNote?: string;
   recommendationNote?: string;
   conclusionNote?: string;
+  supervisionDate?: string;
 }
 
 export type SubmitSupervisionPayload = SaveSupervisionDraftPayload;
@@ -31,6 +32,7 @@ export type SubmitSupervisionPayload = SaveSupervisionDraftPayload;
 export interface RescheduleSupervisionPayload {
   scheduledDate: string;
   scheduledTime: string;
+  location?: string;
   initialNote?: string;
 }
 

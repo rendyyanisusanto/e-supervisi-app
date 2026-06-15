@@ -4,4 +4,5 @@ export interface Period {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  semester?: string;
 }

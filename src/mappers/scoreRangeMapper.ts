@@ -1,6 +1,6 @@
 export class ScoreRangeMapper {
   static toFrontend(apiRange: any) {
-    if (!apiRange) return null;
+    if (!apiRange) return {} as any;
     return {
       id: String(apiRange.id),
       minScore: apiRange.min_score,

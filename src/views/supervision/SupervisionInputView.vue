@@ -12,11 +12,9 @@ import SupervisionStatusTag from '../../components/supervision/SupervisionStatus
 import Textarea from 'primevue/textarea';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
-import Toast from 'primevue/toast';
 import Skeleton from 'primevue/skeleton';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import ConfirmDialog from 'primevue/confirmdialog';
 import { calculateTotalScore, calculateMaxScore, calculateFinalScore, getScoreStatus } from '../../utils/score';
 // We should import score ranges, for dummy let's use fixed or fetch
 import { dummyScoreRanges } from '../../data/dummyScoreRanges';

@@ -176,20 +176,19 @@ const saveBuilder = async () => {
         await instrumentStore.addItem(instrumentId, {
           category: item.category,
           code: item.code,
-          description: item.description,
-          maxScore: item.maxScore,
-          sortOrder: item.sortOrder,
-          isActive: item.isActive
-        });
+          aspect: item.description,
+          indicator: item.description,
+          scoreRangeId: 0,
+          order: item.sortOrder,
+        } as any);
       } else {
         await instrumentStore.updateItem(instrumentId, item.id, {
           category: item.category,
           code: item.code,
-          description: item.description,
-          maxScore: item.maxScore,
-          sortOrder: item.sortOrder,
-          isActive: item.isActive
-        });
+          aspect: item.description,
+          indicator: item.description,
+          order: item.sortOrder,
+        } as any);
       }
     }
     

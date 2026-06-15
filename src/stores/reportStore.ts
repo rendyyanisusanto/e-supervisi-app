@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { TeacherReport } from '../types/teacherReport';
 import type { WeaknessMap } from '../types/weaknessMap';
-import type { SupervisionRecapSummary } from '../types/report';
+
 import { reportService } from '../services/reportService';
 import { getApiErrorMessage } from '../utils/apiError';
 

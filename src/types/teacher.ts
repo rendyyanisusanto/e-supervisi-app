@@ -16,9 +16,12 @@ export interface Teacher {
   nik: string;
   gender: 'L' | 'P';
   email: string;
-  phone: string;
-  mainSubjectId: string; // references Subject.id
+  phone: string | null;
+  mainSubjectId: string | null;
+  mainSubjectName?: string;
+  
   position: string;
   isActive: boolean;
+  roles?: string[];
   userAccount?: UserAccount;
 }

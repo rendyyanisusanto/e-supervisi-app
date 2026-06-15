@@ -1,6 +1,6 @@
 export class WaMapper {
   static templateToFrontend(apiTemplate: any) {
-    if (!apiTemplate) return null;
+    if (!apiTemplate) return {} as any;
     return {
       id: String(apiTemplate.id),
       code: apiTemplate.code,

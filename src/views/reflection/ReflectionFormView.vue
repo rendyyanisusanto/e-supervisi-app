@@ -10,7 +10,6 @@ import Textarea from 'primevue/textarea';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Skeleton from 'primevue/skeleton';
-import Toast from 'primevue/toast';
 import BasePageHeader from '../../components/common/BasePageHeader.vue';
 
 const route = useRoute();
@@ -63,17 +62,12 @@ const handleSubmit = async () => {
   if (!isValid.value) return;
   isSaving.value = true;
   try {
-    const s = supervisionStore.currentSupervision;
-    await reflectionStore.saveReflection({
-      supervisionId,
-      teacherId: s?.teacherId || '',
+    await reflectionStore.saveReflection(supervisionId, {
       strengthReflection: form.value.strengthReflection,
       obstacleReflection: form.value.obstacleReflection,
       improvementPlan: form.value.improvementPlan,
       supportNeeded: form.value.supportNeeded,
-      targetDate: form.value.targetDate || null,
-      status: 'SUDAH_DIISI',
-      submittedAt: new Date().toISOString()
+      targetDate: form.value.targetDate || undefined,
     });
     toast.add({ severity: 'success', summary: 'Sukses', detail: 'Refleksi berhasil dikirim!', life: 3000 });
     setTimeout(() => {

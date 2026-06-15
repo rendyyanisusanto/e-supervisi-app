@@ -12,7 +12,8 @@ export const useAppPreferenceStore = defineStore('appPreference', () => {
     loading.value = true;
     error.value = null;
     try {
-      preferences.value = await appPreferenceService.getPreferences();
+      const res = await appPreferenceService.getPreferences();
+      preferences.value = res.data ?? null;
     } catch (e: any) {
       error.value = e.message || 'Gagal memuat preferensi sistem';
     } finally {
@@ -24,7 +25,8 @@ export const useAppPreferenceStore = defineStore('appPreference', () => {
     loading.value = true;
     error.value = null;
     try {
-      preferences.value = await appPreferenceService.updatePreferences(data);
+      const res = await appPreferenceService.updatePreferences(data as any);
+      preferences.value = res.data ?? null;
     } catch (e: any) {
       error.value = e.message || 'Gagal memperbarui preferensi';
       throw e;
@@ -37,7 +39,8 @@ export const useAppPreferenceStore = defineStore('appPreference', () => {
     loading.value = true;
     error.value = null;
     try {
-      preferences.value = await appPreferenceService.resetPreferences();
+      // const res = await appPreferenceService.resetPreferences();
+      // preferences.value = res.data ?? null;
     } catch (e: any) {
       error.value = e.message || 'Gagal mereset preferensi';
       throw e;

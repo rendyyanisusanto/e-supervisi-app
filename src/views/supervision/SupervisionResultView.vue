@@ -17,7 +17,6 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Skeleton from 'primevue/skeleton';
 import ProgressBar from 'primevue/progressbar';
-import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { calculateCategoryScores } from '../../utils/score';
 import { dummyScoreRanges } from '../../data/dummyScoreRanges';

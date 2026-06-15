@@ -20,7 +20,7 @@ export const useWaTemplateStore = defineStore('waTemplate', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await waTemplateService.getWaTemplates(query);
+      const res = await waTemplateService.getTemplates(query);
       if (res.success) {
         templates.value = res.data;
       }
@@ -36,9 +36,9 @@ export const useWaTemplateStore = defineStore('waTemplate', () => {
     error.value = null;
     try {
       if ('id' in data && data.id) {
-        await waTemplateService.updateWaTemplate(data.id, data as UpdateWaTemplatePayload);
+        await waTemplateService.updateTemplate(String(data.id), data as any);
       } else {
-        await waTemplateService.createWaTemplate(data as CreateWaTemplatePayload);
+        await waTemplateService.createTemplate(data as CreateWaTemplatePayload);
       }
       await fetchTemplates(); // Refresh
     } catch (e: any) {
@@ -52,7 +52,7 @@ export const useWaTemplateStore = defineStore('waTemplate', () => {
   const toggleStatus = async (id: string | number) => {
     loading.value = true;
     try {
-      await waTemplateService.toggleWaTemplateStatus(id);
+      await waTemplateService.toggleTemplateStatus(id);
       await fetchTemplates();
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal mengubah status template');
@@ -79,7 +79,7 @@ export const useWaTemplateStore = defineStore('waTemplate', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await waTemplateService.getWaLogs(query);
+      const res = await waTemplateService.getLogs(query);
       if (res.success) {
         logs.value = res.data;
       }
@@ -93,7 +93,7 @@ export const useWaTemplateStore = defineStore('waTemplate', () => {
   const sendTest = async (id: string | number, variables: Record<string, string>) => {
     loading.value = true;
     try {
-      await waTemplateService.sendTestTemplate(id, variables);
+      await waTemplateService.sendTestWa(id, variables as any);
       await fetchLogs(); // Refresh logs
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal mengirim test pesan');
@@ -106,7 +106,7 @@ export const useWaTemplateStore = defineStore('waTemplate', () => {
   const retryFailedLog = async (id: string | number) => {
     loading.value = true;
     try {
-      await waTemplateService.retryLog(id);
+      await waTemplateService.retryMessage(id);
       await fetchLogs();
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal mengirim ulang pesan');

@@ -21,5 +21,6 @@ export interface WaLog {
   status: 'PENDING' | 'SENT' | 'FAILED';
   response?: string;
   sentAt?: string;
+  errorMessage?: string;
   createdAt: string;
 }

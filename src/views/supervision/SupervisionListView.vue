@@ -17,8 +17,6 @@ import Dropdown from 'primevue/dropdown';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import BaseActionMenu from '../../components/common/BaseActionMenu.vue';
-import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 

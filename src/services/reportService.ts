@@ -177,7 +177,7 @@ export const reportService = {
         id: s.id,
         teacher_name: dummyTeachers.find(t => t.id === s.teacherId)?.name || 'Guru',
         supervisor_name: 'Penilai',
-        supervision_date: s.date,
+        supervision_date: s.supervisionDate || s.createdAt,
         final_score: s.finalScore,
         kriteria: s.finalScore && s.finalScore >= 91 ? 'Sangat Baik' : (s.finalScore && s.finalScore >= 81 ? 'Baik' : 'Cukup'),
         status: s.status

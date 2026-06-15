@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import type { ReportSettings } from '../types/reportSetting';
 import { reportSettingService } from '../services/reportSettingService';
 import { getApiErrorMessage } from '../utils/apiError';
-import type { UpdateReportSettingPayload } from '../types/dto/settings.dto';
+import type { UpdateReportSettingsPayload as UpdateReportSettingPayload } from '../types/dto/settings.dto';
 
 export const useReportSettingStore = defineStore('reportSetting', () => {
   const settings = ref<ReportSettings | null>(null);
@@ -18,10 +18,7 @@ export const useReportSettingStore = defineStore('reportSetting', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await reportSettingService.getReportSettings();
-      if (res.success) {
-        settings.value = res.data;
-      }
+      settings.value = (await reportSettingService.getSettings()).data ?? null;
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal memuat format laporan');
     } finally {
@@ -29,14 +26,11 @@ export const useReportSettingStore = defineStore('reportSetting', () => {
     }
   };
 
-  const updateSettings = async (data: UpdateReportSettingPayload) => {
+  const updateSettings = async (data: Partial<ReportSettings>) => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await reportSettingService.updateReportSettings(data);
-      if (res.success) {
-        settings.value = res.data;
-      }
+      settings.value = (await reportSettingService.updateSettings(data as UpdateReportSettingPayload)).data ?? null;
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal memperbarui format laporan');
       throw new Error(error.value!);
@@ -49,10 +43,7 @@ export const useReportSettingStore = defineStore('reportSetting', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await reportSettingService.resetReportSettings();
-      if (res.success) {
-        settings.value = res.data;
-      }
+      settings.value = (await reportSettingService.resetSettings()).data ?? null;
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal mereset format laporan');
       throw new Error(error.value!);

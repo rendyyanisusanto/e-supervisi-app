@@ -20,7 +20,7 @@ export const useSchoolProfileStore = defineStore('schoolProfile', () => {
     try {
       const res = await schoolProfileService.getProfile();
       if (res.success) {
-        profile.value = res.data;
+        profile.value = res.data ?? null;
       }
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal memuat profil sekolah');
@@ -35,7 +35,7 @@ export const useSchoolProfileStore = defineStore('schoolProfile', () => {
     try {
       const res = await schoolProfileService.updateProfile(data);
       if (res.success) {
-        profile.value = res.data;
+        profile.value = res.data ?? null;
       }
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal memperbarui profil sekolah');
@@ -51,7 +51,7 @@ export const useSchoolProfileStore = defineStore('schoolProfile', () => {
     try {
       const res = await schoolProfileService.uploadLogo(file);
       if (res.success) {
-        profile.value = res.data;
+        profile.value = res.data ?? null;
       }
     } catch (e: any) {
       error.value = getApiErrorMessage(e, 'Gagal mengunggah logo');

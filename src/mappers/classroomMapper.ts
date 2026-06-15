@@ -1,6 +1,6 @@
 export class ClassroomMapper {
   static toFrontend(apiClassroom: any) {
-    if (!apiClassroom) return null;
+    if (!apiClassroom) return {} as any;
     return {
       id: String(apiClassroom.id),
       name: apiClassroom.name,

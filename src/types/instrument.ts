@@ -18,5 +18,6 @@ export interface Instrument {
   type: InstrumentType;
   description: string;
   isActive: boolean;
+  itemsCount?: number;
   items?: InstrumentItem[];
 }

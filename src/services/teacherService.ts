@@ -6,7 +6,7 @@ import { isApiMode } from './dataSource';
 import { endpoints } from './endpoints';
 import httpClient from './httpClient';
 import type { ApiListResponse, ApiResponse, QueryParams } from '../types/api';
-import type { CreateTeacherPayload, UpdateTeacherPayload, UpdateTeacherRolePayload } from '../types/dto/teacher.dto';
+import type { CreateTeacherPayload, UpdateTeacherPayload } from '../types/dto/teacher.dto';
 import { paginateArray, sortArray, filterBySearch } from '../utils/pagination';
 import { TeacherMapper } from '../mappers/teacherMapper';
 
@@ -101,9 +101,10 @@ export const teacherService = {
     const newTeacher: Teacher = {
       ...payload,
       id: Date.now().toString(),
+      mainSubjectId: payload.mainSubjectId ? String(payload.mainSubjectId) : null,
       isActive: payload.isActive ?? true,
-      roles: payload.roles || []
-    };
+      roles: payload.roles || ['GURU']
+    } as Teacher;
     
     teachers.push(newTeacher);
     
@@ -179,7 +180,7 @@ export const teacherService = {
     };
   },
 
-  async updateTeacherRoles(id: string | number, payload: UpdateTeacherRolePayload): Promise<ApiResponse<Teacher>> {
+  async updateTeacherRoles(id: string | number, payload: any): Promise<ApiResponse<Teacher>> {
     if (isApiMode()) {
       const response = await httpClient.patch<ApiResponse<any>>(`${endpoints.teachers}/${id}/roles`, { roles: payload.roles });
       return {
