@@ -246,5 +246,47 @@ export const teacherService = {
       message: 'Foto guru berhasil diupload (Dummy)',
       data: { photo: mockPhotoPath }
     };
+  },
+
+  async downloadImportTemplate() {
+    if (isApiMode()) {
+      try {
+        const response = await httpClient.get(endpoints.teachersImportTemplate, {
+          responseType: 'blob'
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'Template_Import_Guru.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Download template gagal', error);
+        alert('Gagal mengunduh template. Pastikan Anda memiliki akses.');
+      }
+    } else {
+      alert('Mode dummy: Fitur download template tidak tersedia');
+    }
+  },
+
+  async importExcel(file: File): Promise<ApiResponse<any>> {
+    if (isApiMode()) {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await httpClient.post<ApiResponse<any>>(endpoints.teachersImport, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    }
+
+    await mockDelay(1000);
+    return {
+      success: true,
+      message: 'Berhasil mengimport 1 guru (Dummy)',
+      data: { successCount: 1, failedCount: 0, errors: [] }
+    };
   }
 };

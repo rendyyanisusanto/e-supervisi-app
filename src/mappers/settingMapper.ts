@@ -3,6 +3,9 @@ export class SettingMapper {
     if (!apiProfile) return {} as any;
     return {
       id: String(apiProfile.id),
+      appName: apiProfile.app_name,
+      appTagline: apiProfile.app_tagline,
+      primaryColor: apiProfile.primary_color,
       name: apiProfile.name,
       npsn: apiProfile.npsn,
       address: apiProfile.address,
@@ -22,6 +25,9 @@ export class SettingMapper {
 
   static profileToApiPayload(frontendProfile: any) {
     return {
+      app_name: frontendProfile.appName,
+      app_tagline: frontendProfile.appTagline,
+      primary_color: frontendProfile.primaryColor,
       name: frontendProfile.name,
       npsn: frontendProfile.npsn,
       address: frontendProfile.address,

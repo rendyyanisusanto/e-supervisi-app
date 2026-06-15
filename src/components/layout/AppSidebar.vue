@@ -3,11 +3,13 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/authStore';
 import { useLayoutStore } from '../../stores/layoutStore';
+import { useSchoolProfileStore } from '../../stores/schoolProfileStore';
 import SidebarMenuItem from './SidebarMenuItem.vue';
 import Avatar from 'primevue/avatar';
 
 const authStore = useAuthStore();
 const layoutStore = useLayoutStore();
+const schoolProfileStore = useSchoolProfileStore();
 const router = useRouter();
 
 const user = computed(() => authStore.user);
@@ -129,13 +131,14 @@ const menuItems = computed(() => {
        :class="[layoutStore.sidebarCollapsed ? 'w-[84px]' : 'w-72']">
     <!-- Header -->
     <div class="h-16 flex items-center px-4 shrink-0 mt-2">
-      <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 text-white shrink-0">
-        <i class="pi pi-desktop text-xl"></i>
+      <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 text-white shrink-0 overflow-hidden">
+        <img v-if="schoolProfileStore.profile?.logo" :src="schoolProfileStore.profile.logo" alt="Logo" class="w-full h-full object-contain bg-white" />
+        <i v-else class="pi pi-desktop text-xl"></i>
       </div>
       <div class="ml-3 overflow-hidden whitespace-nowrap transition-opacity duration-300"
            :class="{'opacity-0 w-0': layoutStore.sidebarCollapsed}">
-        <div class="font-bold text-white text-lg tracking-tight leading-none">E-Supervisi</div>
-        <div class="text-blue-200 text-[10px] uppercase tracking-wider font-semibold mt-1">Supervisi Berbasis Data</div>
+        <div class="font-bold text-white text-lg tracking-tight leading-none">{{ schoolProfileStore.profile?.appName || 'E-Supervisi' }}</div>
+        <div class="text-blue-200 text-[10px] uppercase tracking-wider font-semibold mt-1 truncate" :title="schoolProfileStore.profile?.appTagline">{{ schoolProfileStore.profile?.appTagline || 'Supervisi Berbasis Data' }}</div>
       </div>
     </div>
 

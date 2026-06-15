@@ -19,5 +19,6 @@ defineEmits(['action']);
     <h3 class="text-lg font-semibold text-slate-800 mb-2">{{ title }}</h3>
     <p class="text-slate-500 text-sm max-w-sm mb-6 leading-relaxed">{{ description }}</p>
     <Button v-if="actionLabel" :label="actionLabel" @click="$emit('action')" outlined />
+    <slot name="action"></slot>
   </div>
 </template>

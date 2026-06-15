@@ -2,8 +2,8 @@
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/authStore';
+import { useSchoolProfileStore } from '../../stores/schoolProfileStore';
 import { useToast } from 'primevue/usetoast';
-
 
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -13,6 +13,7 @@ import Message from 'primevue/message';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const schoolProfileStore = useSchoolProfileStore();
 const toast = useToast();
 
 const form = reactive({
@@ -36,18 +37,6 @@ const submitLogin = async () => {
     toast.add({ severity: 'error', summary: 'Login Gagal', detail: authStore.error || 'Terjadi kesalahan', life: 3000 });
   }
 };
-
-const demoAccounts = [
-  { role: 'Admin', username: 'admin', pass: 'admin123' },
-  { role: 'Kurikulum', username: 'kurikulum', pass: 'admin123' },
-  { role: 'Penilai', username: 'penilai', pass: 'admin123' },
-  { role: 'Guru', username: 'guru', pass: 'admin123' },
-];
-
-const useDemoAccount = (username: string) => {
-  form.username = username;
-  form.password = 'admin123';
-};
 </script>
 
 <template>
@@ -57,11 +46,12 @@ const useDemoAccount = (username: string) => {
       <div class="w-full max-w-md mx-auto">
         <!-- Logo & Header -->
         <div class="mb-8 text-center lg:text-left">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-soft text-primary mb-4">
-            <i class="pi pi-desktop text-2xl"></i>
+          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-soft text-primary mb-4 overflow-hidden">
+            <img v-if="schoolProfileStore.profile?.logo" :src="schoolProfileStore.profile.logo" alt="Logo" class="w-full h-full object-cover" />
+            <i v-else class="pi pi-desktop text-2xl"></i>
           </div>
-          <h1 class="text-3xl font-bold text-slate-900 mb-2">Masuk ke E-Supervisi</h1>
-          <p class="text-slate-500">Kelola supervisi guru, instrumen, hasil, dan laporan secara digital.</p>
+          <h1 class="text-3xl font-bold text-slate-900 mb-2">{{ schoolProfileStore.profile?.appName ? `Masuk ke ${schoolProfileStore.profile.appName}` : 'Masuk ke E-Supervisi' }}</h1>
+          <p class="text-slate-500">{{ schoolProfileStore.profile?.appTagline || 'Kelola supervisi guru, instrumen, hasil, dan laporan secara digital.' }}</p>
         </div>
 
         <Message v-if="authStore.error" severity="error" :closable="false" class="mb-6">{{ authStore.error }}</Message>
@@ -89,26 +79,7 @@ const useDemoAccount = (username: string) => {
           <Button type="submit" label="Masuk" class="w-full !py-3 !text-lg" :loading="authStore.loading" :disabled="authStore.loading" />
         </form>
 
-        <!-- Demo Accounts -->
-        <div class="mt-10">
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-slate-200"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-white text-slate-500">Akun Demo Sprint 1</span>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-3 mt-6">
-            <div v-for="acc in demoAccounts" :key="acc.role" 
-                 @click="useDemoAccount(acc.username)"
-                 class="border border-slate-200 rounded-xl p-3 cursor-pointer hover:border-primary hover:bg-primary-soft transition-colors text-center">
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ acc.role }}</div>
-              <div class="text-sm font-medium text-slate-900">{{ acc.username }}</div>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
 

@@ -18,7 +18,7 @@ export const useTeacherStore = defineStore('teacher', () => {
     loading.value = true;
     error.value = null;
     try {
-      const res = await teacherService.getTeachers();
+      const res = await teacherService.getTeachers({ limit: 1000 });
       if (res.success) {
         teachers.value = res.data;
       }
@@ -86,6 +86,23 @@ export const useTeacherStore = defineStore('teacher', () => {
     }
   };
 
+  const importTeachers = async (file: File) => {
+    loading.value = true;
+    error.value = null;
+    try {
+      const res = await teacherService.importExcel(file);
+      if (res.success) {
+        await fetchTeachers();
+      }
+      return res;
+    } catch (err: any) {
+      error.value = getApiErrorMessage(err, 'Gagal mengimport guru');
+      throw new Error(error.value);
+    } finally {
+      loading.value = false;
+    }
+  };
+
   return {
     teachers,
     loading,
@@ -96,6 +113,7 @@ export const useTeacherStore = defineStore('teacher', () => {
     updateTeacher,
     deleteTeacher,
     toggleStatus,
-    uploadPhoto
+    uploadPhoto,
+    importTeachers
   };
 });

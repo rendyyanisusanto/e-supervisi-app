@@ -1,5 +1,8 @@
 export interface SchoolProfile {
   id: number;
+  appName: string;
+  appTagline: string;
+  primaryColor: string;
   name: string;
   npsn: string;
   address: string;

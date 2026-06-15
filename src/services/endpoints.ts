@@ -10,6 +10,8 @@ export const endpoints = {
   },
   periods: '/periods',
   teachers: '/teachers',
+  teachersImportTemplate: '/teachers/import-template',
+  teachersImport: '/teachers/import',
   subjects: '/subjects',
   classrooms: '/classrooms',
   instruments: '/instruments',

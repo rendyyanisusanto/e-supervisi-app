@@ -52,7 +52,8 @@ const majorOptions = [
   { label: 'TKR', value: 'TKR' },
   { label: 'DKV', value: 'DKV' },
   { label: 'Kuliner', value: 'Kuliner' },
-  { label: 'Bisnis Digital', value: 'Bisnis Digital' }
+  { label: 'Bisnis Digital', value: 'Bisnis Digital' },
+  { label: 'Lainnya...', value: 'Lainnya' }
 ];
 
 const form = ref({
@@ -60,6 +61,7 @@ const form = ref({
   name: '',
   grade: 'X',
   major: 'TKJ',
+  customMajor: '',
   homeroomTeacherId: '',
   isActive: true
 });
@@ -93,14 +95,19 @@ const getTeacherName = (id: string) => {
 };
 
 const openAddDialog = () => {
-  form.value = { id: '', name: '', grade: 'X', major: 'TKJ', homeroomTeacherId: '', isActive: true };
+  form.value = { id: '', name: '', grade: 'X', major: 'TKJ', customMajor: '', homeroomTeacherId: '', isActive: true };
   dialogMode.value = 'add';
   submitted.value = false;
   dialogVisible.value = true;
 };
 
 const openEditDialog = (data: any) => {
-  form.value = { ...data };
+  const isPredefined = majorOptions.some(m => m.value === data.major && m.value !== 'Lainnya');
+  form.value = { 
+    ...data,
+    major: isPredefined ? data.major : 'Lainnya',
+    customMajor: isPredefined ? '' : data.major
+  };
   dialogMode.value = 'edit';
   submitted.value = false;
   dialogVisible.value = true;
@@ -113,8 +120,16 @@ const saveClassroom = async () => {
     toast.add({ severity: 'error', summary: 'Validasi Gagal', detail: 'Harap isi semua field wajib', life: 3000 });
     return;
   }
+  
+  if (form.value.major === 'Lainnya' && !form.value.customMajor) {
+    toast.add({ severity: 'error', summary: 'Validasi Gagal', detail: 'Harap isi jurusan lainnya', life: 3000 });
+    return;
+  }
 
   const payload = { ...form.value };
+  if (payload.major === 'Lainnya') {
+    payload.major = payload.customMajor;
+  }
 
   try {
     if (dialogMode.value === 'add') {
@@ -243,6 +258,11 @@ const getActionItems = (data: any) => [
             <label for="major" class="block text-sm font-medium text-slate-700">Jurusan <span class="text-red-500">*</span></label>
             <Select id="major" v-model="form.major" :options="majorOptions" optionLabel="label" optionValue="value" :class="[{'p-invalid': submitted && !form.major}, 'w-full']" />
           </div>
+        </div>
+
+        <div class="flex flex-col gap-1" v-if="form.major === 'Lainnya'">
+          <label for="customMajor" class="block text-sm font-medium text-slate-700">Jurusan Lainnya <span class="text-red-500">*</span></label>
+          <InputText id="customMajor" v-model.trim="form.customMajor" required :class="[{'p-invalid': submitted && form.major === 'Lainnya' && !form.customMajor}, 'w-full']" placeholder="Ketik nama jurusan..." />
         </div>
 
         <div class="flex flex-col gap-1">

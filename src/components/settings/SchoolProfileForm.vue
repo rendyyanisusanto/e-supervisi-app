@@ -52,6 +52,29 @@ const handleSave = () => {
     </Message>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Section 0: Kustomisasi Aplikasi -->
+      <div class="space-y-4 md:col-span-2">
+        <h3 class="text-lg font-bold text-slate-800 border-b pb-2">Kustomisasi Tampilan Aplikasi</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="space-y-1">
+            <label class="text-sm font-medium text-slate-700">Nama Aplikasi</label>
+            <InputText v-model="formData.appName" class="w-full" placeholder="Cth: E-Supervisi SMK" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-sm font-medium text-slate-700">Tagline / Caption</label>
+            <InputText v-model="formData.appTagline" class="w-full" placeholder="Cth: Aplikasi Supervisi Guru" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-sm font-medium text-slate-700">Warna Dasar (Primary Color)</label>
+            <div class="flex gap-2">
+              <input type="color" v-model="formData.primaryColor" class="h-10 w-12 border border-slate-200 rounded p-1 cursor-pointer" />
+              <InputText v-model="formData.primaryColor" class="w-full font-mono text-sm uppercase" />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Section 1: Identitas Sekolah -->
       <div class="space-y-4">
         <h3 class="text-lg font-bold text-slate-800 border-b pb-2">Identitas Sekolah</h3>

@@ -97,8 +97,8 @@ const filteredTeachers = computed(() => {
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     result = result.filter(t => 
-      t.name.toLowerCase().includes(q) || 
-      t.nip.toLowerCase().includes(q)
+      (t.name && t.name.toLowerCase().includes(q)) || 
+      (t.nip && t.nip.toLowerCase().includes(q))
     );
   }
   // Sort by id descending
@@ -229,6 +229,41 @@ const getActionItems = (data: any) => [
   { label: 'Edit', icon: 'pi pi-pencil', command: () => openEditDialog(data) },
   { label: data.isActive ? 'Nonaktifkan' : 'Aktifkan', icon: data.isActive ? 'pi pi-times-circle' : 'pi pi-check-circle', command: () => toggleStatus(data) }
 ];
+
+const importDialogVisible = ref(false);
+const importFile = ref<File | null>(null);
+
+const downloadTemplate = () => {
+  import('..//../services/teacherService').then(m => m.teacherService.downloadImportTemplate());
+};
+
+const handleImportUpload = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    importFile.value = target.files[0];
+  }
+};
+
+const submitImport = async () => {
+  if (!importFile.value) {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: 'Silakan pilih file Excel terlebih dahulu', life: 3000 });
+    return;
+  }
+
+  try {
+    const res = await teacherStore.importTeachers(importFile.value);
+    const detailMsg = `Berhasil: ${res.data?.successCount || 0}, Gagal: ${res.data?.failedCount || 0}. \n${res.data?.errors?.join('\n') || ''}`;
+    if (res.data?.failedCount > 0) {
+      toast.add({ severity: 'warn', summary: 'Import Selesai dengan Beberapa Error', detail: detailMsg, life: 6000 });
+    } else {
+      toast.add({ severity: 'success', summary: 'Import Berhasil', detail: res.message, life: 3000 });
+    }
+    importDialogVisible.value = false;
+    importFile.value = null;
+  } catch (error: any) {
+    toast.add({ severity: 'error', summary: 'Import Gagal', detail: error.message || 'Terjadi kesalahan saat import', life: 5000 });
+  }
+};
 </script>
 
 <template>
@@ -239,6 +274,7 @@ const getActionItems = (data: any) => [
       :breadcrumbs="breadcrumbs"
     >
       <template #actions>
+        <Button label="Import Excel" icon="pi pi-file-excel" severity="success" outlined @click="importDialogVisible = true" class="mr-2" />
         <Button label="Tambah Guru" icon="pi pi-plus" @click="openAddDialog" />
       </template>
     </BasePageHeader>
@@ -410,6 +446,41 @@ const getActionItems = (data: any) => [
         <div class="border-t border-slate-100 pt-4 mt-2">
           <Button label="Batal" icon="pi pi-times" text @click="dialogVisible = false" />
           <Button label="Simpan Data Guru" icon="pi pi-check" @click="saveTeacher" :loading="teacherStore.loading" />
+        </div>
+      </template>
+    </Dialog>
+
+    <Dialog v-model:visible="importDialogVisible" :style="{width: '500px'}" header="Import Data Guru" :modal="true" class="p-fluid">
+      <div class="pt-4 space-y-4">
+        <div class="bg-blue-50 text-blue-800 p-4 rounded-lg flex items-start gap-3">
+          <i class="pi pi-info-circle text-xl mt-0.5"></i>
+          <div class="text-sm">
+            <p class="font-bold mb-1">Panduan Import:</p>
+            <ul class="list-disc pl-4 space-y-1">
+              <li>Pastikan format data sesuai dengan template yang disediakan.</li>
+              <li>Kolom <strong>Nama Lengkap</strong> dan <strong>No WA</strong> wajib diisi.</li>
+              <li>Jika kolom <strong>Username</strong> diisi, sistem akan otomatis membuatkan akun dengan password default: <code>admin123</code>.</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="flex justify-center my-4">
+          <Button label="Unduh Template Excel" icon="pi pi-download" severity="secondary" outlined @click="downloadTemplate" />
+        </div>
+
+        <div class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:bg-slate-50 transition-colors">
+          <input type="file" id="importFile" class="hidden" accept=".xlsx, .xls" @change="handleImportUpload" />
+          <label for="importFile" class="cursor-pointer flex flex-col items-center gap-2">
+            <i class="pi pi-cloud-upload text-3xl text-slate-400"></i>
+            <span class="text-slate-700 font-medium">{{ importFile ? importFile.name : 'Pilih file Excel (.xlsx)' }}</span>
+            <span class="text-xs text-slate-500">Maksimal ukuran file: 5MB</span>
+          </label>
+        </div>
+      </div>
+      <template #footer>
+        <div class="border-t border-slate-100 pt-4 mt-2">
+          <Button label="Batal" icon="pi pi-times" text @click="importDialogVisible = false" />
+          <Button label="Mulai Import" icon="pi pi-check" @click="submitImport" :loading="teacherStore.loading" :disabled="!importFile" />
         </div>
       </template>
     </Dialog>
