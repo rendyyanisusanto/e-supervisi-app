@@ -261,9 +261,9 @@ export const instrumentService = {
       instrumentId: String(instrumentId),
       category: payload.category || '',
       code: payload.code || '',
-      description: payload.indicator || payload.aspect || '',
-      maxScore: 4,
-      sortOrder: payload.order || 0,
+      description: payload.description || '',
+      maxScore: payload.maxScore || 4,
+      sortOrder: payload.sortOrder || 0,
       isActive: (payload as any).isActive ?? true
     };
     

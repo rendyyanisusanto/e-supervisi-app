@@ -10,10 +10,10 @@ export type UpdateInstrumentPayload = Partial<CreateInstrumentPayload>;
 export interface CreateInstrumentItemPayload {
   category?: string;
   code?: string;
-  aspect: string;
-  indicator: string;
-  scoreRangeId: number;
-  order: number;
+  description: string;
+  maxScore: number;
+  sortOrder: number;
+  isActive?: boolean;
 }
 
 export type UpdateInstrumentItemPayload = Partial<CreateInstrumentItemPayload>;

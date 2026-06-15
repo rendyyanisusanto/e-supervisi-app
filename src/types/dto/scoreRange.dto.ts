@@ -1,5 +1,5 @@
 export interface CreateScoreRangePayload {
-  name: string;
+  status: string;
   minScore: number;
   maxScore: number;
   description?: string;

@@ -2,7 +2,7 @@ export interface ScoreRange {
   id: string;
   minScore: number;
   maxScore: number;
-  name: string; // e.g. "Optimal", "Baik"
+  status: string; // e.g. "Optimal", "Baik"
   color: string; // e.g. "success", "info" (maps to severity)
   description?: string;
 }

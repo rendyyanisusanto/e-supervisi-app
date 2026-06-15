@@ -15,5 +15,8 @@ export const dummySchoolProfile: SchoolProfile = {
   city: "Malang",
   province: "Jawa Timur",
   reportFooter: "Dokumen ini dicetak melalui Sistem E-Supervisi SMK.",
+  appName: "E-Supervisi",
+  appTagline: "Sistem Supervisi Guru",
+  primaryColor: "#3b82f6",
   updatedAt: new Date().toISOString()
 };

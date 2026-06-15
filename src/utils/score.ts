@@ -18,7 +18,7 @@ export const getScoreStatus = (finalScore: number, scoreRanges: ScoreRange[]): s
   if (finalScore === 0) return '-';
   
   const range = scoreRanges.find(r => finalScore >= r.minScore && finalScore <= r.maxScore);
-  return range ? range.name : 'Kurang';
+  return range ? range.status : 'Kurang';
 };
 
 export const getItemStatus = (score: number | null, maxScore: number): string | null => {
