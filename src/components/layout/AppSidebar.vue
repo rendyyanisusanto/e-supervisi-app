@@ -131,9 +131,9 @@ const menuItems = computed(() => {
        :class="[layoutStore.sidebarCollapsed ? 'w-[84px]' : 'w-72']">
     <!-- Header -->
     <div class="h-16 flex items-center px-4 shrink-0 mt-2">
-      <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 text-white shrink-0 overflow-hidden">
-        <img v-if="schoolProfileStore.profile?.logo" :src="schoolProfileStore.profile.logo" alt="Logo" class="w-full h-full object-contain bg-white" />
-        <i v-else class="pi pi-desktop text-xl"></i>
+      <div class="h-10 w-10 shrink-0 flex items-center justify-center">
+        <img v-if="schoolProfileStore.profile?.logo" :src="schoolProfileStore.profile.logo" alt="Logo" class="w-full h-full object-contain" />
+        <i v-else class="pi pi-building text-white text-xl drop-shadow-md"></i>
       </div>
       <div class="ml-3 overflow-hidden whitespace-nowrap transition-opacity duration-300"
            :class="{'opacity-0 w-0': layoutStore.sidebarCollapsed}">

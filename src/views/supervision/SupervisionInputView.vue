@@ -214,6 +214,19 @@ const lowScoreItemsCount = computed(() => {
               <div class="text-sm text-gray-500">Jadwal</div>
               <div class="font-medium">{{ supervision.scheduledDate }} {{ supervision.scheduledTime }}</div>
             </div>
+            <div v-if="supervision.location">
+              <div class="text-sm text-gray-500">Lokasi Penilaian</div>
+              <div class="font-medium flex items-center gap-2 mt-1">
+                <i class="pi pi-map-marker text-gray-400"></i>
+                {{ supervision.location }}
+              </div>
+            </div>
+            <div v-if="supervision.initialNote" class="md:col-span-2 mt-2 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
+              <div class="text-sm font-semibold text-yellow-800 mb-1 flex items-center gap-1">
+                <i class="pi pi-info-circle"></i> Catatan Awal
+              </div>
+              <div class="text-sm text-yellow-700 whitespace-pre-wrap">{{ supervision.initialNote }}</div>
+            </div>
           </div>
         </div>
 

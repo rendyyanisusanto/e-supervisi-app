@@ -46,9 +46,9 @@ const submitLogin = async () => {
       <div class="w-full max-w-md mx-auto">
         <!-- Logo & Header -->
         <div class="mb-8 text-center lg:text-left">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-soft text-primary mb-4 overflow-hidden">
-            <img v-if="schoolProfileStore.profile?.logo" :src="schoolProfileStore.profile.logo" alt="Logo" class="w-full h-full object-cover" />
-            <i v-else class="pi pi-desktop text-2xl"></i>
+          <div class="w-24 h-24 flex items-center justify-center mb-4 mx-auto lg:mx-0">
+            <img v-if="schoolProfileStore.profile?.logo" :src="schoolProfileStore.profile.logo" alt="Logo" class="w-full h-full object-contain" />
+            <i v-else class="pi pi-desktop text-4xl text-primary"></i>
           </div>
           <h1 class="text-3xl font-bold text-slate-900 mb-2">{{ schoolProfileStore.profile?.appName ? `Masuk ke ${schoolProfileStore.profile.appName}` : 'Masuk ke E-Supervisi' }}</h1>
           <p class="text-slate-500">{{ schoolProfileStore.profile?.appTagline || 'Kelola supervisi guru, instrumen, hasil, dan laporan secara digital.' }}</p>

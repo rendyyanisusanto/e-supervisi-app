@@ -20,9 +20,9 @@ const showAddress = computed(() => props.settings?.showSchoolAddress !== false);
     'justify-center text-center': headerStyle === 'SIMPLE',
     'items-start': headerStyle !== 'SIMPLE'
   }">
-    <div v-if="showLogo && headerStyle !== 'SIMPLE'" class="w-20 h-20 bg-slate-200 rounded-full flex-shrink-0 flex items-center justify-center border-2 border-slate-300 print:border-black overflow-hidden">
-      <img v-if="profile?.logo" :src="profile.logo" alt="Logo" class="w-full h-full object-cover" />
-      <i v-else class="pi pi-image text-slate-400 text-2xl print:hidden"></i>
+    <div v-if="showLogo && headerStyle !== 'SIMPLE'" class="w-20 h-20 flex-shrink-0 flex items-center justify-center">
+      <img v-if="profile?.logo" :src="profile.logo" alt="Logo" class="w-full h-full object-contain" />
+      <i v-else class="pi pi-building text-2xl text-slate-400"></i>
     </div>
     
     <div :class="{'text-center w-full': headerStyle === 'SIMPLE', 'text-center flex-1': headerStyle === 'FORMAL'}">

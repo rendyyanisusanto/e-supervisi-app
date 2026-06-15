@@ -10,7 +10,8 @@ import BasePageHeader from '../../components/common/BasePageHeader.vue';
 import ReportHeader from '../../components/report/ReportHeader.vue';
 import ReportFooter from '../../components/report/ReportFooter.vue';
 import ReportSignatureSection from '../../components/report/ReportSignatureSection.vue';
-import { triggerPrint } from '../../utils/print';
+import jsPDF from 'jspdf';
+import { toJpeg } from 'html-to-image';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
@@ -29,6 +30,7 @@ const instrumentStore = useInstrumentStore();
 const profileStore = useSchoolProfileStore();
 const settingStore = useReportSettingStore();
 const toast = useToast();
+const isGeneratingPdf = ref(false);
 
 const supervisionId = route.params.id as string;
 
@@ -85,8 +87,68 @@ const instruments = computed(() => {
 });
 const instrumentNames = computed(() => instruments.value.map(i => i?.name).join(', '));
 
-const printReport = () => {
-  triggerPrint();
+const printReport = async () => {
+  const element = document.getElementById('report-content');
+  if (!element) return;
+  
+  isGeneratingPdf.value = true;
+  toast.add({ severity: 'info', summary: 'Memproses', detail: 'Sedang membuat file PDF...', life: 2000 });
+  
+  // temporarily remove shadows, borders, margins, and padding for PDF export
+  // removing padding and margin ensures the jsPDF margin is the ONLY margin, preventing offside/asymmetric layouts
+  element.classList.remove('mx-auto', 'shadow-md', 'border', 'border-gray-200', 'p-8', 'md:p-12', 'mt-4');
+  element.classList.add('p-0', 'm-0');
+  
+  // wait for DOM to update after class change
+  await new Promise(resolve => setTimeout(resolve, 50));
+  
+  try {
+    const elementWidth = element.scrollWidth;
+    const elementHeight = element.scrollHeight;
+
+    const imgData = await toJpeg(element, {
+      quality: 0.98,
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      width: elementWidth,
+      height: elementHeight
+    });
+    
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    const margin = 15; // 15mm margin
+    const pdfWidth = pdf.internal.pageSize.getWidth() - (margin * 2);
+    const pdfHeight = (elementHeight * pdfWidth) / elementWidth;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    
+    let heightLeft = pdfHeight;
+    
+    // First page
+    pdf.addImage(imgData, 'JPEG', margin, margin, pdfWidth, pdfHeight);
+    heightLeft -= (pageHeight - margin * 2);
+    
+    let currentOffset = pageHeight - margin * 2;
+    
+    // Subsequent pages
+    while (heightLeft > 0) {
+      pdf.addPage();
+      let yPosition = margin - currentOffset;
+      pdf.addImage(imgData, 'JPEG', margin, yPosition, pdfWidth, pdfHeight);
+      
+      currentOffset += (pageHeight - margin * 2);
+      heightLeft -= (pageHeight - margin * 2);
+    }
+    
+    pdf.save(`Hasil_Supervisi_${teacher.value?.name?.replace(/\s+/g, '_') || 'Guru'}.pdf`);
+    toast.add({ severity: 'success', summary: 'Berhasil', detail: 'PDF berhasil diunduh', life: 3000 });
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    toast.add({ severity: 'error', summary: 'Gagal', detail: 'Terjadi kesalahan saat membuat PDF', life: 3000 });
+  } finally {
+    element.classList.remove('p-0', 'm-0');
+    element.classList.add('mx-auto', 'shadow-md', 'border', 'border-gray-200', 'p-8', 'md:p-12', 'mt-4');
+    isGeneratingPdf.value = false;
+  }
 };
 </script>
 
@@ -100,7 +162,7 @@ const printReport = () => {
       <template #actions>
         <div class="flex gap-2">
           <Button label="Kembali" icon="pi pi-arrow-left" severity="secondary" outlined @click="router.push('/supervisi')" />
-          <Button label="Cetak Laporan" icon="pi pi-print" @click="printReport" v-if="supervision?.status === 'SELESAI'" />
+          <Button label="Cetak PDF" icon="pi pi-file-pdf" @click="printReport" v-if="supervision?.status === 'SELESAI'" :loading="isGeneratingPdf" />
         </div>
       </template>
     </BasePageHeader>
@@ -110,197 +172,143 @@ const printReport = () => {
       <Skeleton width="100%" height="20rem" />
     </div>
 
-    <div v-else-if="supervision" class="flex flex-col gap-6 print:block print:bg-white print:m-0 print:p-0">
+    <div id="report-content" v-else-if="supervision" class="max-w-[800px] mx-auto bg-white p-8 md:p-12 shadow-md border border-gray-200 mt-4 print:shadow-none print:border-none print:m-0 print:p-0" style="font-family: 'Times New Roman', Times, serif;">
       
-      <div class="hidden print:block mb-8">
+      <!-- Report Header (Always visible now) -->
+      <div class="mb-8">
         <ReportHeader :profile="profileStore.profile" :settings="settingStore.settings" />
-        <div class="text-center mb-6">
-          <h2 class="font-bold text-lg underline underline-offset-4 mb-1">HASIL SUPERVISI GURU</h2>
+        <div class="text-center mt-6 mb-8">
+          <h2 class="font-bold text-xl underline underline-offset-4 mb-1 uppercase">Laporan Hasil Supervisi Akademik</h2>
         </div>
       </div>
 
-      <!-- Top Overview Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Identity Card -->
-        <Card class="md:col-span-2 shadow-sm border-none">
-          <template #content>
-            <div class="flex items-start gap-4">
-              <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-2xl shrink-0">
-                {{ teacher?.name.charAt(0) || 'G' }}
-              </div>
-              <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-4">
-                <div>
-                  <div class="text-sm text-gray-500">Guru yang Dinilai</div>
-                  <div class="font-bold text-lg text-gray-800">{{ teacher?.name || 'Tidak diketahui' }}</div>
-                </div>
-                <div>
-                  <div class="text-sm text-gray-500">Penilai</div>
-                  <div class="font-medium text-gray-800">{{ supervisor?.name || 'Tidak diketahui' }}</div>
-                </div>
-                <div>
-                  <div class="text-sm text-gray-500">Instrumen</div>
-                  <div class="font-medium text-gray-800">{{ instrumentNames || 'Tidak diketahui' }}</div>
-                </div>
-                <div>
-                  <div class="text-sm text-gray-500">Tanggal Supervisi</div>
-                  <div class="font-medium text-gray-800">{{ supervision.supervisionDate || supervision.scheduledDate || '-' }}</div>
-                </div>
-              </div>
-            </div>
+      <!-- Identity Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-8 text-base">
+        <table class="w-full">
+          <tbody>
+            <tr>
+              <td class="py-1 w-32 font-medium text-gray-700">Nama Guru</td>
+              <td class="py-1 w-4 text-center">:</td>
+              <td class="py-1 font-bold text-gray-900">{{ teacher?.name || 'Tidak diketahui' }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 font-medium text-gray-700">NIP/NUPTK</td>
+              <td class="py-1 text-center">:</td>
+              <td class="py-1 text-gray-900">{{ teacher?.nip || teacher?.nuptk || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 font-medium text-gray-700">Mata Pelajaran</td>
+              <td class="py-1 text-center">:</td>
+              <td class="py-1 text-gray-900">{{ teacher?.mainSubjectName || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <table class="w-full">
+          <tbody>
+            <tr>
+              <td class="py-1 w-32 font-medium text-gray-700">Nama Penilai</td>
+              <td class="py-1 w-4 text-center">:</td>
+              <td class="py-1 text-gray-900">{{ supervisor?.name || 'Tidak diketahui' }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 font-medium text-gray-700">Tanggal Supervisi</td>
+              <td class="py-1 text-center">:</td>
+              <td class="py-1 text-gray-900">{{ supervision.supervisionDate || supervision.scheduledDate || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 font-medium text-gray-700">Lokasi / Kelas</td>
+              <td class="py-1 text-center">:</td>
+              <td class="py-1 text-gray-900">{{ supervision.location || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Nilai -->
+      <div class="mb-8">
+        <h3 class="font-bold text-lg mb-3 border-b-2 border-gray-800 pb-1 uppercase">I. Rincian Penilaian</h3>
+        <DataTable :value="tableItems" rowGroupMode="subheader" groupRowsBy="displayGroup" sortMode="single" sortField="displayGroup" :sortOrder="1" class="text-base p-datatable-sm" showGridlines>
+          <template #groupheader="slotProps">
+              <span class="font-bold text-gray-900 uppercase bg-gray-100 px-2 py-1 block">{{ slotProps.data.displayGroup }}</span>
           </template>
-        </Card>
-
-        <!-- Final Score Card -->
-        <Card class="bg-primary text-white shadow-sm border-none overflow-hidden relative">
-          <template #content>
-            <div class="absolute top-0 right-0 p-4 opacity-20">
-              <i class="pi pi-star-fill text-6xl"></i>
-            </div>
-            <div class="relative z-10 flex flex-col items-center justify-center h-full gap-2 py-2">
-              <div class="text-white/80 font-medium">Nilai Akhir</div>
-              <div class="text-5xl font-bold">{{ supervision.finalScore.toFixed(2) }}</div>
-              <div class="bg-white/20 px-4 py-1 rounded-full font-bold tracking-wider mt-2">
-                {{ supervision.finalStatus || 'Belum Ada Status' }}
-              </div>
-              <div class="text-sm text-white/70 mt-2">
-                Total Skor: {{ supervision.totalScore }} / {{ supervision.maxScore }}
-              </div>
-            </div>
-          </template>
-        </Card>
+          <Column field="itemCode" header="Kode" style="width: 10%" bodyStyle="vertical-align: top;"></Column>
+          <Column field="itemDescription" header="Aspek yang Dinilai" style="width: 45%" bodyStyle="vertical-align: top;"></Column>
+          <Column header="Skor" style="width: 15%" bodyStyle="vertical-align: top;" class="text-center">
+            <template #body="{ data }">
+              <span class="font-bold">{{ data.score !== null ? data.score : '-' }}</span>
+              <span class="text-sm text-gray-600"> / {{ data.maxScore }}</span>
+            </template>
+          </Column>
+          <Column field="note" header="Catatan" style="width: 30%" bodyStyle="vertical-align: top;">
+            <template #body="{ data }">
+              <span class="text-base text-gray-800 whitespace-pre-wrap">{{ data.note || '-' }}</span>
+            </template>
+          </Column>
+        </DataTable>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Content -->
-        <div class="lg:col-span-2 flex flex-col gap-6">
-          
-          <!-- Category Scores -->
-          <Card class="shadow-sm border-none">
-            <template #title><h3 class="font-bold text-lg mb-2">Ringkasan per Aspek/Kategori</h3></template>
-            <template #content>
-              <div class="flex flex-col gap-4">
-                <div v-for="cat in categoryScores" :key="cat.category" class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-gray-800">{{ cat.category }}</span>
-                    <span class="font-bold text-primary">{{ cat.finalScore.toFixed(2) }} ({{ cat.status }})</span>
-                  </div>
-                  <ProgressBar :value="cat.finalScore" :showValue="false" style="height: 8px" />
-                  <div class="text-right text-xs text-gray-500 mt-2">
-                    Skor: {{ cat.totalScore }} / {{ cat.maxScore }}
-                  </div>
-                </div>
-              </div>
-            </template>
-          </Card>
-
-          <!-- Detail Items -->
-          <Card class="shadow-sm border-none">
-            <template #title><h3 class="font-bold text-lg mb-2">Detail Penilaian per Item</h3></template>
-            <template #content>
-              <DataTable :value="tableItems" responsiveLayout="scroll" :paginator="true" :rows="10" rowGroupMode="subheader" groupRowsBy="displayGroup" sortMode="single" sortField="displayGroup" :sortOrder="1" showGridlines>
-                <template #groupheader="slotProps">
-                    <span class="font-bold text-primary bg-blue-50 px-3 py-1 rounded">{{ slotProps.data.displayGroup }}</span>
-                </template>
-                <Column field="itemCode" header="Kode" style="width: 10%" bodyStyle="vertical-align: top;"></Column>
-                <Column field="itemDescription" header="Deskripsi Item" style="width: 45%" bodyStyle="vertical-align: top;"></Column>
-                <Column header="Skor" style="width: 15%" bodyStyle="vertical-align: top;">
-                  <template #body="{ data }">
-                    <span class="font-bold">{{ data.score !== null ? data.score : '-' }}</span>
-                    <span class="text-xs text-gray-500"> / {{ data.maxScore }}</span>
-                  </template>
-                </Column>
-                <Column field="itemStatus" header="Status" style="width: 15%" bodyStyle="vertical-align: top;">
-                  <template #body="{ data }">
-                    <span v-if="data.itemStatus" class="text-sm">{{ data.itemStatus }}</span>
-                    <span v-else class="text-sm text-gray-400">-</span>
-                  </template>
-                </Column>
-                <Column field="note" header="Catatan" style="width: 15%" bodyStyle="vertical-align: top;">
-                  <template #body="{ data }">
-                    <span class="text-sm text-gray-600 whitespace-pre-wrap">{{ data.note || '-' }}</span>
-                  </template>
-                </Column>
-              </DataTable>
-            </template>
-          </Card>
-
+      <!-- Catatan Umum & Hasil Akhir -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div>
+          <h3 class="font-bold text-lg mb-3 border-b-2 border-gray-800 pb-1 uppercase">II. Catatan Supervisi</h3>
+          <table class="w-full text-base border-collapse border border-gray-300">
+            <tbody>
+              <tr v-if="supervision.initialNote">
+                <td class="p-2 w-1/3 font-semibold bg-gray-50 border border-gray-300 align-top">Catatan Awal</td>
+                <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ supervision.initialNote }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 w-1/3 font-semibold bg-gray-50 border border-gray-300 align-top">Kekuatan</td>
+                <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ supervision.strengthNote || '-' }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold bg-gray-50 border border-gray-300 align-top">Area Perbaikan</td>
+                <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ supervision.improvementNote || '-' }}</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold bg-gray-50 border border-gray-300 align-top">Rekomendasi</td>
+                <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ supervision.recommendationNote || '-' }}</td>
+              </tr>
+              <tr v-if="supervision.generalNote">
+                <td class="p-2 font-semibold bg-gray-50 border border-gray-300 align-top">Lainnya</td>
+                <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ supervision.generalNote }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <!-- Sidebar / Notes -->
-        <div class="lg:col-span-1 flex flex-col gap-6">
-          <Card class="shadow-sm border-none">
-            <template #title><h3 class="font-bold text-lg mb-2">Catatan Umum Penilai</h3></template>
-            <template #content>
-              <div class="flex flex-col gap-4">
-                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                  <div class="font-bold text-green-800 mb-1 flex items-center gap-2"><i class="pi pi-thumbs-up"></i> Kekuatan / Hal Positif</div>
-                  <div class="text-sm text-green-900 whitespace-pre-wrap">{{ supervision.strengthNote || 'Tidak ada catatan.' }}</div>
-                </div>
-                
-                <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                  <div class="font-bold text-orange-800 mb-1 flex items-center gap-2"><i class="pi pi-exclamation-circle"></i> Area Perbaikan</div>
-                  <div class="text-sm text-orange-900 whitespace-pre-wrap">{{ supervision.improvementNote || 'Tidak ada catatan.' }}</div>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                  <div class="font-bold text-blue-800 mb-1 flex items-center gap-2"><i class="pi pi-info-circle"></i> Rekomendasi</div>
-                  <div class="text-sm text-blue-900 whitespace-pre-wrap">{{ supervision.recommendationNote || 'Tidak ada catatan.' }}</div>
-                </div>
-                
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" v-if="supervision.generalNote">
-                  <div class="font-bold text-gray-800 mb-1 flex items-center gap-2"><i class="pi pi-align-left"></i> Catatan Lainnya</div>
-                  <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ supervision.generalNote }}</div>
-                </div>
-              </div>
-            </template>
-          </Card>
-
-          <Card class="shadow-sm border-none">
-            <template #title><h3 class="font-bold text-lg mb-2">Riwayat Supervisi Guru</h3></template>
-            <template #content>
-              <div v-if="teacherHistory.length === 0" class="text-sm text-gray-500 italic">
-                Belum ada riwayat supervisi sebelumnya.
-              </div>
-              <div v-else class="flex flex-col gap-3">
-                <div v-for="hist in teacherHistory" :key="hist.id" class="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
-                  <div class="text-xs text-gray-500 mb-1">{{ hist.supervisionDate }}</div>
-                  <div class="font-medium text-sm">{{
-                    hist.instrumentIds 
-                      ? hist.instrumentIds.map((id: string) => instrumentStore.instruments.find(i => i.id === id)?.name).join(', ') 
-                      : 'Instrumen'
-                  }}</div>
-                  <div class="flex justify-between items-center mt-1">
-                    <span class="font-bold text-primary">{{ hist.finalScore.toFixed(2) }}</span>
-                    <span class="text-xs px-2 py-0.5 rounded-full" :class="hist.finalStatus === 'Kurang' || hist.finalStatus === 'Perlu Pembinaan' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'">
-                      {{ hist.finalStatus }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </Card>
-
-          <Card class="shadow-sm border-none">
-            <template #title><h3 class="font-bold text-lg mb-2">Refleksi Guru</h3></template>
-            <template #content>
-              <div class="text-center py-6 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                <i class="pi pi-comment text-3xl mb-2 text-gray-400"></i>
-                <p class="text-sm mb-4">Refleksi guru belum diisi.</p>
-                <Button label="Isi Refleksi (Sprint 4)" severity="secondary" size="small" outlined disabled />
-              </div>
-            </template>
-          </Card>
+        
+        <div>
+          <h3 class="font-bold text-lg mb-3 border-b-2 border-gray-800 pb-1 uppercase">III. Hasil Akhir</h3>
+          <div class="border border-gray-300 p-6 rounded bg-gray-50 flex flex-col items-center justify-center h-[calc(100%-2.5rem)] text-center">
+            <div class="text-base font-semibold mb-2 uppercase tracking-wider text-gray-700">Nilai Supervisi</div>
+            <div class="text-5xl font-bold text-gray-900 mb-3">{{ supervision.finalScore.toFixed(2) }}</div>
+            <div class="text-base text-gray-600 mb-4">Total Skor: {{ supervision.totalScore }} / {{ supervision.maxScore }}</div>
+            <div class="px-6 py-2 bg-primary text-white font-bold rounded-full text-lg tracking-wider">
+              {{ supervision.finalStatus || 'Belum Ada Status' }}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="hidden print:block mt-8">
+      <!-- Signatures -->
+      <div class="mt-8" style="page-break-inside: avoid;">
         <ReportSignatureSection 
           :profile="profileStore.profile" 
           :settings="settingStore.settings" 
           :supervisorName="supervisor?.name"
         />
+      </div>
+
+      <!-- Footer -->
+      <div class="mt-16 text-center text-xs text-gray-400 border-t border-gray-200 pt-4 print:hidden">
+        Dicetak dari Sistem E-Supervisi pada {{ new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
+      </div>
+      
+      <div class="hidden print:block mt-16">
         <ReportFooter :profile="profileStore.profile" :settings="settingStore.settings" />
       </div>
+
     </div>
   </div>
 </template>
