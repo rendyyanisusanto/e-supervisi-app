@@ -14,12 +14,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toJpeg } from 'html-to-image';
 import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
 import Skeleton from 'primevue/skeleton';
 import { useToast } from 'primevue/usetoast';
-import { calculateTotalScore, calculateMaxScore, calculateFinalScore, getScoreStatus } from '../../utils/score';
-
 const route = useRoute();
 const router = useRouter();
 const supervisionStore = useSupervisionStore();
@@ -37,17 +33,6 @@ const breadcrumbs = ref([
   { label: 'Supervisi', to: '/supervisi' },
   { label: 'Hasil Supervisi' }
 ]);
-
-
-const tableItems = computed(() => {
-  if (!supervision.value) return [];
-  return supervision.value.items.map(item => ({
-    ...item,
-    displayGroup: (item.instrumentName && item.itemCategory && item.instrumentName !== item.itemCategory)
-      ? `${item.instrumentName} - ${item.itemCategory}`
-      : (item.instrumentName || item.itemCategory || 'Umum')
-  }));
-});
 
 const nestedTableItems = computed(() => {
   if (!supervision.value) return {};
