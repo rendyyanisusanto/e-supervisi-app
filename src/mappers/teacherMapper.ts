@@ -43,7 +43,7 @@ export class TeacherMapper {
       // User account info if provided on create
       username: frontendTeacher.userAccount?.username,
       password: frontendTeacher.userAccount?.password,
-      roles: frontendTeacher.roles,
+      roles: frontendTeacher.roles || frontendTeacher.userAccount?.roles,
     };
   }
 }
