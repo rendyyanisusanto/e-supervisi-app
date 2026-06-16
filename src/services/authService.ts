@@ -91,6 +91,31 @@ class AuthService {
     };
   }
 
+  async updateProfile(formData: FormData): Promise<ApiResponse<AuthUserDto>> {
+    if (isApiMode()) {
+      const response = await httpClient.put<ApiResponse<any>>(endpoints.auth.me, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data.data) {
+        const mappedUser = AuthMapper.toAuthUserDto(response.data.data);
+        const currentToken = getStorageItem<string | null>(STORAGE_KEYS.AUTH_TOKEN, null);
+        const currentRefreshToken = getStorageItem<string | null>('refresh_token', null);
+        // update local session
+        this.saveSession({ user: mappedUser, accessToken: currentToken!, refreshToken: currentRefreshToken! });
+        return {
+          success: true,
+          message: response.data.message,
+          data: mappedUser
+        };
+      }
+      return response.data as any;
+    }
+
+    // Dummy mode
+    await mockDelay(500);
+    throw new Error('Update profil belum didukung di mode dummy');
+  }
+
   async logout(): Promise<ApiResponse<void>> {
     if (isApiMode()) {
       try {

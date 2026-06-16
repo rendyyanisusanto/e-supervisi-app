@@ -6,7 +6,10 @@ import { useSupervisionStore } from '../../stores/supervisionStore';
 import { useTeacherStore } from '../../stores/teacherStore';
 import { useInstrumentStore } from '../../stores/instrumentStore';
 import { usePeriodStore } from '../../stores/periodStore';
+import { useReflectionStore } from '../../stores/reflectionStore';
+import { useAuthStore } from '../../stores/authStore';
 import BasePageHeader from '../../components/common/BasePageHeader.vue';
+import ReflectionStatusTag from '../../components/reflection/ReflectionStatusTag.vue';
 import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -21,6 +24,8 @@ const supervisionStore = useSupervisionStore();
 const teacherStore = useTeacherStore();
 const instrumentStore = useInstrumentStore();
 const periodStore = usePeriodStore();
+const reflectionStore = useReflectionStore();
+const authStore = useAuthStore();
 
 const breadcrumbs = ref([
   { label: 'E-Supervisi', to: '/' },
@@ -55,9 +60,14 @@ onMounted(async () => {
     supervisionStore.fetchSupervisions(),
     teacherStore.fetchTeachers(),
     instrumentStore.fetchInstruments(),
-    periodStore.fetchPeriods()
+    periodStore.fetchPeriods(),
+    reflectionStore.fetchReflections()
   ]);
 });
+
+const getReflection = (supervisionId: string) => reflectionStore.reflections.find(r => r.supervisionId === supervisionId);
+const getReflectionStatus = (supervisionId: string) => getReflection(supervisionId)?.status || 'BELUM_DIISI';
+const isGuru = computed(() => authStore.role === 'guru');
 
 const getTeacherName = (id: string) => teacherStore.teachers.find(t => t.id === id)?.name || id;
 const getSupervisorName = (id: string) => teacherStore.teachers.find(t => t.id === id)?.name || 'Admin';
@@ -136,27 +146,43 @@ const getInstrumentName = (ids: string[] | string) => {
             </template>
           </Column>
 
-          <Column header="Skor" field="totalScore" sortable>
+          <Column header="Hasil Supervisi" field="finalScore" sortable>
             <template #body="{ data }">
-              <span class="font-medium text-gray-600">{{ data.totalScore }} / {{ data.maxScore }}</span>
-            </template>
-          </Column>
-          
-          <Column header="Nilai" field="finalScore" sortable>
-            <template #body="{ data }">
-              <span class="font-bold text-primary">{{ data.finalScore.toFixed(2) }}</span>
-            </template>
-          </Column>
-
-          <Column header="Status" field="finalStatus" sortable>
-            <template #body="{ data }">
-              <span class="font-medium text-sm" :class="data.finalStatus === 'Kurang' || data.finalStatus === 'Perlu Pembinaan' ? 'text-red-600' : 'text-green-600'">
-                {{ data.finalStatus }}
-              </span>
+              <div class="flex flex-col">
+                <div class="flex items-baseline gap-1">
+                  <span class="font-bold text-primary">{{ data.finalScore.toFixed(2) }}</span>
+                  <span class="text-xs text-gray-500">({{ data.totalScore }}/{{ data.maxScore }})</span>
+                </div>
+                <span class="font-medium text-xs mt-1" :class="data.finalStatus === 'Kurang' || data.finalStatus === 'Perlu Pembinaan' ? 'text-red-600' : 'text-green-600'">
+                  {{ data.finalStatus }}
+                </span>
+              </div>
             </template>
           </Column>
 
-          <Column :exportable="false" style="min-width: 8rem" bodyClass="text-center">
+          <Column header="Refleksi">
+            <template #body="{ data }">
+              <template v-if="getReflectionStatus(data.id) === 'BELUM_DIISI'">
+                <Button 
+                  v-if="isGuru"
+                  label="Isi Refleksi"
+                  icon="pi pi-pencil" 
+                  severity="primary"
+                  outlined rounded size="small"
+                  @click="router.push(`/refleksi/${data.id}`)" 
+                />
+                <ReflectionStatusTag v-else status="BELUM_DIISI" />
+              </template>
+              <template v-else>
+                <!-- Clickable tag for better UX, or just tag as requested -->
+                <div class="cursor-pointer hover:opacity-80 transition-opacity" @click="router.push(`/refleksi/${data.id}`)" title="Lihat/Edit Refleksi">
+                  <ReflectionStatusTag :status="getReflectionStatus(data.id)" />
+                </div>
+              </template>
+            </template>
+          </Column>
+
+          <Column :exportable="false" style="min-width: 6rem" bodyClass="text-center">
             <template #body="{ data }">
               <Button icon="pi pi-eye" outlined rounded @click="router.push(`/supervisi/${data.id}/hasil`)" title="Lihat Detail" class="mr-2" />
               <Button icon="pi pi-print" severity="secondary" outlined rounded title="Cetak" />

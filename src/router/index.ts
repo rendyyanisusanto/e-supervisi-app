@@ -35,19 +35,19 @@ const router = createRouter({
           path: 'supervisi',
           name: 'supervisi-list',
           component: () => import('../views/supervision/SupervisionListView.vue'),
-          meta: { title: 'Data Supervisi' }
+          meta: { title: 'Data Supervisi', roles: ['admin', 'kurikulum', 'penilai'] }
         },
         {
           path: 'supervisi/mulai',
           name: 'supervisi-mulai',
           component: () => import('../views/supervision/SupervisionCreateView.vue'),
-          meta: { title: 'Mulai Supervisi' }
+          meta: { title: 'Mulai Supervisi', roles: ['admin', 'kurikulum', 'penilai'] }
         },
         {
           path: 'supervisi/:id/input',
           name: 'supervisi-input',
           component: () => import('../views/supervision/SupervisionInputView.vue'),
-          meta: { title: 'Input Penilaian' }
+          meta: { title: 'Input Penilaian', roles: ['admin', 'kurikulum', 'penilai'] }
         },
         {
           path: 'supervisi/:id/hasil',
@@ -65,12 +65,12 @@ const router = createRouter({
           path: 'guru',
           name: 'teacher-list',
           component: () => import('../views/teachers/TeacherListView.vue'),
-          meta: { title: 'Data Guru' }
+          meta: { title: 'Data Guru', roles: ['admin', 'kurikulum', 'penilai'] }
         },
         // Sprint 4 Routes
         { path: 'refleksi', component: () => import('../views/reflection/ReflectionListView.vue'), meta: { title: 'Daftar Refleksi' } },
         { path: 'refleksi/:id', component: () => import('../views/reflection/ReflectionFormView.vue'), meta: { title: 'Isi Refleksi' } },
-        { path: 'guru/peta-kompetensi', component: () => import('../views/competency/TeacherCompetencyView.vue'), meta: { title: 'Peta Kompetensi' } },
+        { path: 'guru/peta-kompetensi', component: () => import('../views/competency/TeacherCompetencyView.vue'), meta: { title: 'Peta Kompetensi', roles: ['admin', 'kurikulum', 'penilai'] } },
         { path: 'guru/rapor', component: () => import('../views/reports/TeacherReportView.vue'), meta: { title: 'Rapor Guru' } },
         { path: 'laporan/rekap-supervisi', component: () => import('../views/reports/SupervisionRecapView.vue'), meta: { title: 'Rekap Supervisi' } },
         { path: 'laporan/dasar', component: () => import('../views/reports/BasicSummaryView.vue'), meta: { title: 'Laporan Dasar' } },
@@ -79,6 +79,7 @@ const router = createRouter({
         { path: 'laporan/peta-kelemahan', component: () => import('../views/reports/WeaknessMapView.vue'), meta: { title: 'Peta Kelemahan' } },
 
         // Generic placeholders for other routes
+        { path: 'profil', component: () => import('../views/profile/ProfileView.vue'), meta: { title: 'Profil Saya' } },
         { path: 'instrumen', component: () => import('../views/instruments/InstrumentListView.vue'), meta: { title: 'Instrumen Supervisi' } },
         { path: 'instrumen/:id/builder', component: () => import('../views/instruments/InstrumentBuilderView.vue'), meta: { title: 'Form Builder' } },
         { path: 'instrumen/rentang-nilai', component: () => import('../views/instruments/ScoreRangeView.vue'), meta: { title: 'Rentang Nilai' } },

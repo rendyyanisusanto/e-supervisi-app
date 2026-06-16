@@ -6,6 +6,8 @@ import { useTeacherStore } from '../../stores/teacherStore';
 import { useInstrumentStore } from '../../stores/instrumentStore';
 import { useSchoolProfileStore } from '../../stores/schoolProfileStore';
 import { useReportSettingStore } from '../../stores/reportSettingStore';
+import { useAuthStore } from '../../stores/authStore';
+import { useReflectionStore } from '../../stores/reflectionStore';
 import BasePageHeader from '../../components/common/BasePageHeader.vue';
 import ReportHeader from '../../components/report/ReportHeader.vue';
 import ReportFooter from '../../components/report/ReportFooter.vue';
@@ -23,6 +25,8 @@ const teacherStore = useTeacherStore();
 const instrumentStore = useInstrumentStore();
 const profileStore = useSchoolProfileStore();
 const settingStore = useReportSettingStore();
+const authStore = useAuthStore();
+const reflectionStore = useReflectionStore();
 const toast = useToast();
 const isGeneratingPdf = ref(false);
 
@@ -61,7 +65,8 @@ onMounted(async () => {
     profileStore.fetchProfile(),
     settingStore.fetchSettings(),
     supervisionStore.fetchSupervisionById(supervisionId),
-    supervisionStore.fetchSupervisions() // Fetch all so we can filter by teacher
+    supervisionStore.fetchSupervisions(), // Fetch all so we can filter by teacher
+    reflectionStore.fetchReflectionBySupervision(supervisionId)
   ]);
 
   if (!supervisionStore.currentSupervision) {
@@ -85,6 +90,12 @@ const instruments = computed(() => {
   return supervision.value.instrumentIds.map(id => instrumentStore.instruments.find(i => i.id === id)).filter(Boolean);
 });
 const instrumentNames = computed(() => instruments.value.map(i => i?.name).join(', '));
+const isGuru = computed(() => authStore.role === 'guru');
+
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+};
 
 const printReport = async () => {
   const element = document.getElementById('report-content');
@@ -193,6 +204,8 @@ const printReport = async () => {
         <div class="flex gap-2">
           <Button label="Kembali" icon="pi pi-arrow-left" severity="secondary" outlined @click="router.push('/supervisi')" />
           <Button label="Cetak PDF" icon="pi pi-file-pdf" @click="printReport" v-if="supervision?.status === 'SELESAI'" :loading="isGeneratingPdf" />
+          <Button v-if="isGuru && supervision?.status === 'SELESAI'" label="Isi Refleksi" icon="pi pi-file-edit" @click="router.push(`/refleksi/${supervision.id}`)" severity="primary" />
+          <Button v-else-if="supervision?.status === 'SELESAI'" label="Lihat Refleksi" icon="pi pi-eye" @click="router.push(`/refleksi/${supervision.id}`)" severity="info" outlined />
         </div>
       </template>
     </BasePageHeader>
@@ -344,6 +357,35 @@ const printReport = async () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Refleksi Guru -->
+      <div class="mb-12" v-if="reflectionStore.currentReflection && reflectionStore.currentReflection.status !== 'BELUM_DIISI'">
+        <h3 class="font-bold text-lg mb-3 border-b-2 border-gray-800 pb-1 uppercase">IV. Refleksi Guru</h3>
+        <table class="w-full text-base border-collapse border border-gray-300">
+          <tbody>
+            <tr>
+              <td class="p-2 w-1/3 font-semibold bg-gray-50 border border-gray-300 align-top">Kekuatan yang Dirasakan</td>
+              <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ reflectionStore.currentReflection.strengthReflection || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="p-2 font-semibold bg-gray-50 border border-gray-300 align-top">Kendala yang Dialami</td>
+              <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ reflectionStore.currentReflection.obstacleReflection || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="p-2 font-semibold bg-gray-50 border border-gray-300 align-top">Rencana Perbaikan</td>
+              <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ reflectionStore.currentReflection.improvementPlan || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="p-2 font-semibold bg-gray-50 border border-gray-300 align-top">Dukungan yang Dibutuhkan</td>
+              <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ reflectionStore.currentReflection.supportNeeded || '-' }}</td>
+            </tr>
+            <tr v-if="reflectionStore.currentReflection.targetDate">
+              <td class="p-2 font-semibold bg-gray-50 border border-gray-300 align-top">Target Waktu Perbaikan</td>
+              <td class="p-2 border border-gray-300 whitespace-pre-wrap">{{ formatDate(reflectionStore.currentReflection.targetDate) }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- Signatures -->

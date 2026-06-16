@@ -39,19 +39,20 @@ const menuItems = computed(() => {
       label: 'Supervisi',
       icon: 'pi pi-desktop',
       key: 'supervisi',
-      to: '/supervisi',
+      to: ['admin', 'kurikulum', 'penilai'].includes(role) ? '/supervisi' : '/supervisi/hasil',
       visible: ['admin', 'kurikulum', 'penilai', 'guru'].includes(role),
       items: [
         { label: 'Data Supervisi', to: '/supervisi', key: 'supervisi-data', visible: ['admin', 'kurikulum', 'penilai'].includes(role) },
         { label: 'Mulai Supervisi', to: '/supervisi/mulai', key: 'supervisi-mulai', visible: ['admin', 'kurikulum', 'penilai'].includes(role) },
-        { label: 'Hasil Supervisi', to: '/supervisi/hasil', key: 'supervisi-hasil', visible: true }
+        { label: 'Hasil Supervisi', to: '/supervisi/hasil', key: 'supervisi-hasil', visible: true },
+        { label: 'Refleksi Guru', to: '/refleksi', key: 'supervisi-refleksi', visible: true }
       ]
     },
     {
       label: 'Guru',
       icon: 'pi pi-users',
       key: 'guru',
-      to: '/guru',
+      to: ['admin', 'kurikulum', 'penilai'].includes(role) ? '/guru' : '/guru/rapor',
       visible: ['admin', 'kurikulum', 'penilai', 'guru'].includes(role),
       items: [
         { label: 'Data Guru', to: '/guru', key: 'guru-data', visible: ['admin', 'kurikulum', 'penilai'].includes(role) },

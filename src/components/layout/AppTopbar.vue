@@ -29,7 +29,7 @@ const menuItems = [
     label: 'Profil Saya',
     icon: 'pi pi-user',
     command: () => {
-      toast.add({ severity: 'info', summary: 'Fitur', detail: 'Profil pengguna akan tersedia di Sprint 2', life: 3000 });
+      router.push('/profil');
     }
   },
   {
@@ -104,7 +104,8 @@ const menuRef = ref();
 
       <!-- Profile Dropdown -->
       <div class="flex items-center gap-2 cursor-pointer p-1 rounded-full hover:bg-slate-50 transition-colors" @click="toggleMenu" aria-haspopup="true" aria-controls="overlay_menu">
-        <Avatar :label="getInitials(user?.name || '')" shape="circle" class="bg-primary-soft text-primary font-semibold" />
+        <Avatar v-if="user?.avatar" :image="'http://localhost:3000' + user.avatar" shape="circle" class="bg-slate-100" />
+        <Avatar v-else :label="getInitials(user?.name || '')" shape="circle" class="bg-primary-soft text-primary font-semibold" />
         <div class="hidden md:block text-left mr-2">
           <div class="text-sm font-semibold text-slate-800 leading-tight">{{ user?.name }}</div>
           <div class="text-xs text-slate-500">{{ user?.position }}</div>

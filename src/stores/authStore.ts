@@ -63,6 +63,24 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  const updateProfile = async (formData: FormData) => {
+    loading.value = true;
+    error.value = null;
+    try {
+      const response = await authService.updateProfile(formData);
+      if (response.success && response.data) {
+        user.value = response.data;
+        return true;
+      }
+      return false;
+    } catch (e: any) {
+      error.value = getApiErrorMessage(e);
+      throw e;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   const canAccessRole = (requiredRole: Role) => {
     return hasRole(role.value, requiredRole);
   };
@@ -82,6 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
     clearError,
     login,
     logout,
+    updateProfile,
     canAccessRole,
     canAccessAnyRole,
   };
