@@ -191,6 +191,19 @@ const printReport = async () => {
     isGeneratingPdf.value = false;
   }
 };
+
+onMounted(() => {
+  // Auto-download PDF if requested via URL param (e.g. from mobile app)
+  if (route.query.download === 'true') {
+    // Wait for data to load
+    const checkData = setInterval(() => {
+      if (supervision.value && !loading.value) {
+        clearInterval(checkData);
+        setTimeout(() => printReport(), 1000); // Give it a second to render
+      }
+    }, 500);
+  }
+});
 </script>
 
 <template>
