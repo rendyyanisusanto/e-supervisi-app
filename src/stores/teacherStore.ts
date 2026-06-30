@@ -37,7 +37,7 @@ export const useTeacherStore = defineStore('teacher', () => {
     try {
       const res = await teacherService.getTeacherById(id);
       if (res.success) {
-        selectedTeacher.value = res.data;
+        selectedTeacher.value = res.data ?? null;
       }
     } catch (err: any) {
       throw new Error(getApiErrorMessage(err, 'Gagal mengambil detail guru'));

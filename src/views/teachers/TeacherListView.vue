@@ -16,9 +16,7 @@ import Select from 'primevue/select';
 import Checkbox from 'primevue/checkbox';
 import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
-import Avatar from 'primevue/avatar';
 import Skeleton from 'primevue/skeleton';
-import Divider from 'primevue/divider';
 
 import BasePageHeader from '../../components/common/BasePageHeader.vue';
 import BaseToolbarFilter from '../../components/common/BaseToolbarFilter.vue';
