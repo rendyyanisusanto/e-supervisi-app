@@ -16,6 +16,9 @@ import Select from 'primevue/select';
 import Checkbox from 'primevue/checkbox';
 import Tag from 'primevue/tag';
 import MultiSelect from 'primevue/multiselect';
+import Avatar from 'primevue/avatar';
+import Skeleton from 'primevue/skeleton';
+import Divider from 'primevue/divider';
 
 import BasePageHeader from '../../components/common/BasePageHeader.vue';
 import BaseToolbarFilter from '../../components/common/BaseToolbarFilter.vue';
@@ -223,8 +226,34 @@ const handlePhotoUpload = async (e: Event) => {
   }
 };
 
+// ========================
+// Detail Modal
+// ========================
+const detailDialogVisible = ref(false);
+
+const openDetailDialog = async (data: any) => {
+  detailDialogVisible.value = true;
+  try {
+    await teacherStore.fetchTeacherById(data.id);
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: err.message || 'Gagal memuat detail guru', life: 3000 });
+    detailDialogVisible.value = false;
+  }
+};
+
+const getInitials = (name: string) => {
+  if (!name) return '?';
+  return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+};
+
+const formatGender = (gender: string) => {
+  if (gender === 'L') return 'Laki-laki';
+  if (gender === 'P') return 'Perempuan';
+  return '-';
+};
+
 const getActionItems = (data: any) => [
-  { label: 'Lihat Detail', icon: 'pi pi-eye', command: () => toast.add({severity:'info', summary:'Info', detail:'Detail lengkap akan tersedia di Sprint 2', life: 3000}) },
+  { label: 'Lihat Detail', icon: 'pi pi-eye', command: () => openDetailDialog(data) },
   { label: 'Upload Foto', icon: 'pi pi-camera', command: () => triggerUploadPhoto(data) },
   { label: 'Edit', icon: 'pi pi-pencil', command: () => openEditDialog(data) },
   { label: data.isActive ? 'Nonaktifkan' : 'Aktifkan', icon: data.isActive ? 'pi pi-times-circle' : 'pi pi-check-circle', command: () => toggleStatus(data) }
@@ -486,5 +515,218 @@ const submitImport = async () => {
     </Dialog>
 
     <input type="file" ref="uploadPhotoInput" class="hidden" accept="image/jpeg, image/png, image/webp" @change="handlePhotoUpload" />
+
+    <!-- Modal Detail Guru -->
+    <Dialog 
+      v-model:visible="detailDialogVisible" 
+      :style="{width: '680px'}" 
+      header="Detail Guru" 
+      :modal="true"
+      :closable="true"
+      class="p-fluid"
+    >
+      <!-- Loading State -->
+      <div v-if="teacherStore.detailLoading" class="pt-4 space-y-4">
+        <div class="flex items-center gap-4">
+          <Skeleton shape="circle" size="4rem" />
+          <div class="flex-1 space-y-2">
+            <Skeleton width="55%" height="1.1rem" />
+            <Skeleton width="35%" height="0.9rem" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <Skeleton v-for="i in 6" :key="i" height="2rem" />
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div v-else-if="teacherStore.selectedTeacher" class="pt-2">
+
+        <!-- Header: Avatar + Nama + Status -->
+        <div class="flex items-center gap-4 pb-4 mb-4 border-b border-slate-200">
+          <img 
+            v-if="teacherStore.selectedTeacher.photo" 
+            :src="teacherStore.selectedTeacher.photo" 
+            :alt="teacherStore.selectedTeacher.name"
+            class="w-14 h-14 rounded-full object-cover flex-shrink-0 border border-slate-200"
+          />
+          <div v-else class="teacher-detail-initials flex-shrink-0">
+            {{ getInitials(teacherStore.selectedTeacher.name) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-base font-semibold text-slate-800 truncate">{{ teacherStore.selectedTeacher.name }}</p>
+            <p class="text-sm text-slate-500">{{ teacherStore.selectedTeacher.position || 'Guru' }}</p>
+            <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+              <BaseStatusTag :status="teacherStore.selectedTeacher.isActive ? 'Aktif' : 'Tidak Aktif'" />
+              <Tag 
+                v-for="role in teacherStore.selectedTeacher.userAccount?.roles" 
+                :key="role" 
+                :value="role" 
+                severity="secondary" 
+                rounded 
+                class="!text-[10px]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Informasi Pribadi -->
+        <div class="mb-4 pb-1 border-b border-slate-200">
+          <h3 class="text-sm font-semibold text-slate-800 mb-3">Informasi Pribadi</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+            <div class="detail-row">
+              <span class="detail-label">NIP</span>
+              <span class="detail-value">{{ teacherStore.selectedTeacher.nip || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">NUPTK</span>
+              <span class="detail-value">{{ teacherStore.selectedTeacher.nuptk || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">NIK</span>
+              <span class="detail-value">{{ teacherStore.selectedTeacher.nik || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Jenis Kelamin</span>
+              <span class="detail-value">{{ formatGender(teacherStore.selectedTeacher.gender) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kontak -->
+        <div class="mb-4 pb-1 border-b border-slate-200">
+          <h3 class="text-sm font-semibold text-slate-800 mb-3">Kontak</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+            <div class="detail-row">
+              <span class="detail-label">No. WhatsApp</span>
+              <span class="detail-value">
+                <a 
+                  v-if="teacherStore.selectedTeacher.phone" 
+                  :href="'https://wa.me/' + teacherStore.selectedTeacher.phone?.replace(/[^0-9]/g, '')"
+                  target="_blank"
+                  class="detail-link"
+                >{{ teacherStore.selectedTeacher.phone }}</a>
+                <span v-else class="text-slate-400">-</span>
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Email</span>
+              <span class="detail-value">
+                <a 
+                  v-if="teacherStore.selectedTeacher.email" 
+                  :href="'mailto:' + teacherStore.selectedTeacher.email"
+                  class="detail-link"
+                >{{ teacherStore.selectedTeacher.email }}</a>
+                <span v-else class="text-slate-400">-</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kepegawaian -->
+        <div :class="teacherStore.selectedTeacher.userAccount ? 'mb-4 pb-1 border-b border-slate-200' : 'mb-2'">
+          <h3 class="text-sm font-semibold text-slate-800 mb-3">Kepegawaian</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+            <div class="detail-row">
+              <span class="detail-label">Mata Pelajaran Utama</span>
+              <span class="detail-value">{{ teacherStore.selectedTeacher.mainSubjectName || getSubjectName(teacherStore.selectedTeacher.mainSubjectId || '') || '-' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Jabatan</span>
+              <span class="detail-value">{{ teacherStore.selectedTeacher.position || '-' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Akun & Hak Akses -->
+        <template v-if="teacherStore.selectedTeacher.userAccount">
+          <div class="mb-2">
+            <h3 class="text-sm font-semibold text-slate-800 mb-3">Akun &amp; Hak Akses</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+              <div class="detail-row">
+                <span class="detail-label">Username</span>
+                <span class="detail-value font-mono text-sm">{{ teacherStore.selectedTeacher.userAccount.username }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Role</span>
+                <div class="flex gap-1 flex-wrap">
+                  <Tag 
+                    v-for="role in teacherStore.selectedTeacher.userAccount.roles" 
+                    :key="role" 
+                    :value="role" 
+                    severity="secondary" 
+                    rounded 
+                    class="!text-[10px]"
+                  />
+                </div>
+              </div>
+              <div class="detail-row" v-if="teacherStore.selectedTeacher.userAccount.lastLoginAt">
+                <span class="detail-label">Login Terakhir</span>
+                <span class="detail-value">{{ new Date(teacherStore.selectedTeacher.userAccount.lastLoginAt as string).toLocaleString('id-ID') }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+      </div>
+
+      <template #footer>
+        <div class="border-t border-slate-100 pt-4 mt-2">
+          <Button label="Batal" icon="pi pi-times" text @click="detailDialogVisible = false" />
+          <Button 
+            label="Edit Data" 
+            icon="pi pi-pencil" 
+            @click="() => { detailDialogVisible = false; openEditDialog(teacherStore.selectedTeacher); }"
+            v-if="teacherStore.selectedTeacher"
+          />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
+
+<style scoped>
+.teacher-detail-initials {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0;
+}
+
+.detail-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+.detail-link {
+  color: #334155;
+  text-decoration: none;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+  color: #1e293b;
+}
+</style>

@@ -7,7 +7,9 @@ import type { CreateTeacherPayload, UpdateTeacherPayload } from '../types/dto/te
 
 export const useTeacherStore = defineStore('teacher', () => {
   const teachers = ref<Teacher[]>([]);
+  const selectedTeacher = ref<Teacher | null>(null);
   const loading = ref(false);
+  const detailLoading = ref(false);
   const error = ref<string | null>(null);
 
   const clearError = () => {
@@ -26,6 +28,21 @@ export const useTeacherStore = defineStore('teacher', () => {
       error.value = getApiErrorMessage(err, 'Gagal mengambil data guru');
     } finally {
       loading.value = false;
+    }
+  };
+
+  const fetchTeacherById = async (id: string | number) => {
+    detailLoading.value = true;
+    selectedTeacher.value = null;
+    try {
+      const res = await teacherService.getTeacherById(id);
+      if (res.success) {
+        selectedTeacher.value = res.data;
+      }
+    } catch (err: any) {
+      throw new Error(getApiErrorMessage(err, 'Gagal mengambil detail guru'));
+    } finally {
+      detailLoading.value = false;
     }
   };
 
@@ -105,10 +122,13 @@ export const useTeacherStore = defineStore('teacher', () => {
 
   return {
     teachers,
+    selectedTeacher,
     loading,
+    detailLoading,
     error,
     clearError,
     fetchTeachers,
+    fetchTeacherById,
     addTeacher,
     updateTeacher,
     deleteTeacher,

@@ -1,10 +1,13 @@
 import type { Role } from '../constants/roles';
 
 export interface UserAccount {
+  id?: string;
   username: string;
+  email?: string;
   password?: string; // Optional, mostly for creation
   roles: Role[];
   isActive: boolean;
+  lastLoginAt?: string | null;
 }
 
 export interface Teacher {
